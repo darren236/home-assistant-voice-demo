@@ -26,7 +26,7 @@ This is a scripted replay with public MOSS voice presets. The phone-offline swit
 | Speech · phone or server CPU | [MOSS-TTS-Nano 100M ONNX](https://huggingface.co/OpenMOSS-Team/MOSS-TTS-Nano-100M-ONNX) | Small enough to explore speech generation on a reused phone. Phone dense layers use INT8; the server keeps FP32. |
 | Audio decoding · alongside synthesis | [MOSS Audio Tokenizer Nano 20M ONNX](https://huggingface.co/OpenMOSS-Team/MOSS-Audio-Tokenizer-Nano-ONNX) | Turns generated audio tokens into PCM incrementally. The codec stays FP32. |
 
-The deployed console uses [VACA](https://github.com/msp1974/ViewAssist_Companion_App) for capture and playback. Its optional knowledge route adds Wikipedia and local Qwen3 4B Instruct. The reference build starts with Home Assistant's native intents and tap-to-talk.
+The deployed console uses [VACA](https://github.com/msp1974/ViewAssist_Companion_App) for capture and playback. Its optional knowledge route adds Wikipedia and local [Qwen3 4B Instruct](https://ollama.com/library/qwen3:4b-instruct). The reference build starts with Home Assistant's native intents and tap-to-talk.
 
 ## Why replies take different routes
 

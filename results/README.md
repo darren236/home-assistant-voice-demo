@@ -17,6 +17,8 @@ Two handset microphone replays illustrate the timing boundaries. Capture end to 
 
 ## What remains open
 
-The 20-clip wake trial was too small to establish unattended room reliability, so the console uses tap-to-talk. Recognition in noise, long answers, thermal behavior and playback under network loss need broader everyday testing.
+The wake trial used a custom [openWakeWord](https://github.com/dscripka/openWakeWord) classifier exported to TFLite on Android. Its 20 clips were too few to establish unattended room reliability, so the console uses tap-to-talk. Recognition in noise, long answers, thermal behavior and playback under network loss need broader everyday testing.
 
 The original system also uses a 1,522-clip clock/confirmation bank, tempo and guarded pause processing, optional Wikipedia/Qwen answers, VACA-specific playback hooks and a wake guard. Those deployment extensions are described by the figures; they are outside the reference implementation in this repository.
+
+For public questions, local [Qwen3 4B Instruct](https://ollama.com/library/qwen3:4b-instruct) can compose a short answer from retrieved Wikipedia passages; simpler questions use direct extraction. A separate standard phone Assist pipeline uses [Piper en_US-lessac-medium](https://huggingface.co/rhasspy/piper-voices/tree/main/en/en_US/lessac/medium). The bedside voice and this reference build use MOSS.
