@@ -1,4 +1,5 @@
 import java.security.MessageDigest
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     id("com.android.application")
@@ -23,11 +24,14 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    kotlinOptions {
-        jvmTarget = "17"
-    }
     sourceSets.getByName("main").assets.srcDir(layout.buildDirectory.dir("generated/bedsideAssets"))
     sourceSets.getByName("main").assets.srcDir(layout.buildDirectory.dir("generated/bedsideLegal"))
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_17)
+    }
 }
 
 val copyProjectNotices by tasks.registering(Copy::class) {
