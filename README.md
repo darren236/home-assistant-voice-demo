@@ -15,9 +15,9 @@ A Home Assistant voice console built on a spare Galaxy A52s. **Whisper Small INT
 
 ## Try the replay
 
-![The bedside clock and turn trace during a spoken reply](media/preview.png)
-
 [Download the ZIP](https://github.com/darren236/home-assistant-voice-demo/archive/refs/heads/main.zip), extract it, and open `site/index.html` in Chrome. The replay uses scripted device states and audio rendered with built-in MOSS-TTS-Nano voice presets.
+
+![The bedside clock and turn trace during a spoken reply](media/preview.png)
 
 - [Night Light](site/audio/night.mp3) uses a saved spoken confirmation and dims the simulated room.
 - [Ask the time](site/audio/clock.mp3) illustrates the pre-generated clock bank.
@@ -33,9 +33,9 @@ Galaxy A52s mic → Whisper Small INT8 → Home Assistant Assist
                                   Galaxy A52s speaker
 ```
 
-The phone returns the first decoded frame immediately and then decodes two frames at a time. The server applies pitch-preserving tempo and pause processing before Home Assistant streams the reply back to the phone. If phone synthesis fails before answer audio starts, the server can take over. A failure mid-answer ends the reply so the listener does not hear it twice.
+On the phone route, the server checks for saved PCM before it sends tokens to Android. Android decodes the first frame by itself, then decodes two frames at a time. The server processes and buffers PCM before Home Assistant sends it back to the phone for playback.
 
-The speech bank holds **1,440 clock clips** and **82 common and volume confirmations**. These replies can skip live synthesis. A fresh answer can play a short thinking cue while the next audio is generated.
+The saved bank holds **1,440 clock clips** and **82 common and volume confirmations**. On a fresh reply, the bridge can play a short thinking cue while synthesis runs. If the phone route fails before delivering any answer PCM, the server can take over even if the cue has played. A failure after answer PCM starts ends the reply without replaying it.
 
 ## What was measured
 
@@ -46,6 +46,8 @@ The speech bank holds **1,440 clock clips** and **82 common and volume confirmat
 | Wake-word detector, 20-clip offline replay | Original accepted 10/10 intended calls and 5/10 negatives. Trial accepted 8/10 intended calls and 0/10 negatives. | Small offline comparison. An unattended room false-wake rate has yet to be measured. |
 
 The optimized phone run used three threads with CPU spinning and two-frame codec batches after the first frame. The earlier FP32 run on the same phone took 1.70–1.89× audio duration across three replies. Precision, thread count, and codec scheduling differed between runs. A real-time factor below 1 means generation takes less time than the resulting audio. First PCM can contain silence.
+
+Two handset microphone replays illustrate the timing boundaries. Capture end to first outgoing audio took **1,295 ms** for a fresh reply with a cue and **1,064 ms** for a pre-generated clock reply. Bridge request to first answer PCM took **1,147 ms** and **7 ms**, respectively. Both received playback acknowledgements. Each route has one observation, and the two clocks start at different points.
 
 ## Source and assets
 
