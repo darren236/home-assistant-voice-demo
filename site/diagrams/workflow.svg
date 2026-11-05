@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="370" viewBox="0 0 960 370" role="img" aria-labelledby="title description">
+  <title id="title">From a spoken request to a reply</title>
+  <desc id="description">A. A Galaxy A52s captures audio for Whisper Small INT8 on the server. B. Home Assistant Assist resolves the transcript into an action or answer. C. The speech bridge sends saved audio or MOSS-TTS-Nano output back to the handset speaker.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L8 4L0 8" fill="none" stroke="#607269"/></marker>
+    <style>
+      text { font-family: system-ui, sans-serif; fill: #1e2926; font-size: 18px; }
+      .detail { fill: #4d5b56; font-size: 16px; }
+      .heading { font-weight: 600; }
+      .rule { stroke: #d7dfdb; stroke-width: 1; }
+      .flow { stroke: #607269; stroke-width: 1.5; fill: none; marker-end: url(#arrow); }
+    </style>
+  </defs>
+  <rect width="960" height="370" fill="#ffffff"/>
+  <path class="rule" d="M16 48H944M320 16V326M640 16V326"/>
+  <text class="heading" x="24" y="31">A  Capture</text>
+  <text class="heading" x="344" y="31">B  Resolve</text>
+  <text class="heading" x="664" y="31">C  Speak</text>
+  <text class="heading" x="24" y="85">Galaxy A52s</text>
+  <text class="detail" x="24" y="111">Tap to talk in VACA</text>
+  <path class="flow" d="M44 132V165"/>
+  <text class="detail" x="60" y="154">Microphone audio</text>
+  <rect x="16" y="182" width="286" height="70" fill="#e8f1ed"/>
+  <text class="heading" x="24" y="210">Whisper Small INT8</text>
+  <text class="detail" x="24" y="236">Faster Whisper · server CPU</text>
+  <text class="detail" x="24" y="301">Output · transcript to Assist</text>
+  <text class="heading" x="344" y="85">Home Assistant Assist</text>
+  <text class="detail" x="344" y="111">Receives the transcript</text>
+  <path class="flow" d="M364 132V165"/>
+  <text class="detail" x="380" y="154">Resolve the intent</text>
+  <text class="heading" x="344" y="210">Room action or answer</text>
+  <text class="detail" x="344" y="236">Public Q&amp;A can use Wikipedia</text>
+  <text class="detail" x="344" y="260">and Qwen3 4B Instruct</text>
+  <text class="detail" x="344" y="311">Output · reply text</text>
+  <text class="heading" x="664" y="85">Speech bridge</text>
+  <text class="detail" x="664" y="111">Saved PCM or MOSS-TTS-Nano</text>
+  <path class="flow" d="M684 132V165"/>
+  <text class="detail" x="700" y="154">Streamed reply audio</text>
+  <rect x="656" y="182" width="288" height="70" fill="#e8f1ed"/>
+  <text class="heading" x="664" y="210">Galaxy A52s speaker</text>
+  <text class="detail" x="664" y="236">Home Assistant → VACA playback</text>
+  <text class="detail" x="664" y="301">Playback ends the turn</text>
+  <path class="rule" d="M16 332H944"/>
+  <text class="detail" x="24" y="358">Deployed workflow, shown schematically. The handset handles capture and playback.</text>
+</svg>

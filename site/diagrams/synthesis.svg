@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="566" viewBox="0 0 960 566" role="img" aria-labelledby="title description">
+  <title id="title">Inside the streaming synthesis path</title>
+  <desc id="description">The server normalizes Assist reply text and checks saved PCM. On a cache miss, up to 75 SentencePiece tokens go to MOSS-TTS-Nano 100M on Android. Its INT8 dense layers generate audio tokens for the FP32 MOSS Audio Tokenizer Nano 20M decoder. Streamed PCM returns to the server for processing and buffering, then goes to the handset through Home Assistant and VACA.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L8 4L0 8" fill="none" stroke="#607269"/></marker>
+    <style>
+      text { font-family: system-ui, sans-serif; fill: #1e2926; font-size: 18px; }
+      .detail { fill: #4d5b56; font-size: 16px; }
+      .heading { font-weight: 600; }
+      .rule { stroke: #d7dfdb; }
+      .flow { stroke: #607269; stroke-width: 1.5; fill: none; marker-end: url(#arrow); }
+    </style>
+  </defs>
+  <rect width="960" height="566" fill="#ffffff"/>
+  <path class="rule" d="M16 12H944"/>
+  <text class="heading" x="24" y="39">Server · reply preparation</text>
+  <text class="heading" x="24" y="79">Assist reply text</text>
+  <text class="detail" x="24" y="105">Normalize wording</text>
+  <path class="flow" d="M348 87H416"/>
+  <text class="heading" x="452" y="79">Saved PCM lookup</text>
+  <text class="detail" x="452" y="105">Cache hit → saved audio to playback</text>
+  <path class="flow" d="M500 118V128H44V161"/>
+  <text class="detail" x="62" y="149">Cache miss on phone route · up to 75 SentencePiece tokens</text>
+  <rect x="16" y="178" width="928" height="167" fill="#e8f1ed"/>
+  <text class="heading" x="24" y="207">Galaxy A52s · OpenMOSS inference</text>
+  <text class="heading" x="24" y="250">MOSS-TTS-Nano 100M</text>
+  <text class="detail" x="24" y="279">INT8 dense layers</text>
+  <text class="detail" x="24" y="303">Reference audio codes</text>
+  <path class="flow" d="M292 263H382"/>
+  <text class="detail" x="304" y="245">Audio tokens</text>
+  <text class="heading" x="424" y="250">MOSS Audio Tokenizer Nano 20M</text>
+  <text class="detail" x="424" y="279">FP32 decoder</text>
+  <text class="detail" x="424" y="303">First frame alone, then batches of 2</text>
+  <path class="flow" d="M600 318V353H44V395"/>
+  <text class="detail" x="62" y="383">Streamed PCM</text>
+  <path class="rule" d="M16 411H944"/>
+  <text class="heading" x="24" y="439">Server · playback preparation</text>
+  <text class="heading" x="24" y="479">Process and buffer PCM</text>
+  <text class="detail" x="24" y="505">Resample, adjust tempo and short pauses</text>
+  <path class="flow" d="M412 486H466"/>
+  <text class="heading" x="500" y="479">Assist → VACA speaker</text>
+  <text class="detail" x="500" y="505">Stream the reply to the handset</text>
+  <path class="rule" d="M16 526H944"/>
+  <text class="detail" x="24" y="553">OpenMOSS supplies the model and codec. Cache, routing, and playback processing are project integration.</text>
+</svg>

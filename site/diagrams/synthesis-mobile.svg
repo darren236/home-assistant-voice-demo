@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="360" height="908" viewBox="0 0 360 908" role="img" aria-labelledby="title description">
+  <title id="title">Inside the streaming synthesis path</title>
+  <desc id="description">Saved audio bypasses synthesis. A fresh phone reply uses MOSS-TTS-Nano with INT8 dense layers and the FP32 MOSS Audio Tokenizer Nano decoder. The server processes and buffers the streamed PCM before handset playback.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L8 4L0 8" fill="none" stroke="#607269"/></marker>
+    <style>
+      text { font-family: system-ui, sans-serif; fill: #1e2926; font-size: 18px; }
+      .detail { fill: #4d5b56; font-size: 16px; }
+      .heading { font-weight: 600; }
+      .rule { stroke: #d7dfdb; }
+      .flow { stroke: #607269; stroke-width: 1.5; fill: none; marker-end: url(#arrow); }
+    </style>
+  </defs>
+  <rect width="360" height="908" fill="#ffffff"/>
+  <text class="heading" x="16" y="30">Server · reply preparation</text>
+  <path class="rule" d="M16 43H344"/>
+  <text class="heading" x="16" y="76">Assist reply text</text>
+  <text class="detail" x="16" y="100">Normalize wording</text>
+  <path class="flow" d="M36 115V140"/>
+  <text class="heading" x="16" y="174">Saved PCM lookup</text>
+  <text class="detail" x="16" y="198">Hit → saved audio to playback</text>
+  <path class="flow" d="M36 216V245"/>
+  <text class="detail" x="52" y="237">Cache miss on phone route</text>
+  <text class="detail" x="16" y="272">Up to 75 SentencePiece tokens</text>
+  <rect x="8" y="292" width="344" height="302" fill="#e8f1ed"/>
+  <text class="heading" x="16" y="322">Galaxy A52s · inference</text>
+  <text class="heading" x="16" y="363">MOSS-TTS-Nano 100M</text>
+  <text class="detail" x="16" y="390">INT8 dense layers</text>
+  <text class="detail" x="16" y="414">Reference audio codes</text>
+  <path class="flow" d="M36 431V460"/>
+  <text class="detail" x="52" y="452">Audio tokens</text>
+  <text class="heading" x="16" y="494">MOSS Audio Tokenizer</text>
+  <text class="heading" x="16" y="519">Nano 20M · FP32 decoder</text>
+  <text class="detail" x="16" y="548">First frame alone,</text>
+  <text class="detail" x="16" y="572">then batches of 2</text>
+  <path class="flow" d="M36 610V639"/>
+  <text class="detail" x="52" y="631">Streamed PCM</text>
+  <text class="heading" x="16" y="673">Server · playback preparation</text>
+  <path class="rule" d="M16 685H344"/>
+  <text class="heading" x="16" y="719">Process and buffer PCM</text>
+  <text class="detail" x="16" y="744">Resample, adjust tempo</text>
+  <text class="detail" x="16" y="768">and short pauses</text>
+  <path class="flow" d="M36 784V813"/>
+  <text class="heading" x="16" y="847">Assist → VACA speaker</text>
+  <text class="detail" x="16" y="873">Stream the reply to the handset</text>
+  <text class="detail" x="16" y="900">Deployed phone route · schematic</text>
+</svg>

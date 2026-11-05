@@ -117,12 +117,21 @@ main > section { margin-bottom: 34px; }
 .measurements { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
 .measurements article { padding-top: 10px; border-top: 1px solid var(--line); }
 .measurements h3 + p { margin-top: 5px; font-size: .875rem; }
+.system-figure { margin: 0; }
+.system-figure picture { display: block; }
+.system-figure img { display: block; width: 100%; height: auto; }
+.system-figure figcaption, .diagram-explanation {
+  margin-top: 12px; color: var(--muted); font-size: .9rem; max-width: 85ch;
+}
 footer { border-bottom: 0; border-top: 1px solid var(--line); color: var(--muted); font-size: .82rem; }
 .sr-only {
   position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
   overflow: hidden; clip-path: inset(50%); white-space: nowrap;
 }
 
+@media (max-width: 760px) {
+  .system-figure picture { max-width: 420px; margin-inline: auto; }
+}
 @media (max-width: 680px) {
   .demo-grid, .measurements { grid-template-columns: 1fr; }
   .inspector { border-left: 0; border-top: 1px solid var(--line); }

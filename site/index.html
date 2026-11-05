@@ -78,6 +78,18 @@
       <noscript><p class="caption">Enable JavaScript to play the samples.</p></noscript>
     </section>
 
+    <section id="workflow" aria-labelledby="workflow-title">
+      <div class="section-title"><h2 id="workflow-title">From a spoken request to a reply</h2></div>
+      <figure class="system-figure">
+        <picture>
+          <source media="(max-width: 760px)" srcset="diagrams/workflow-mobile.svg">
+          <img src="diagrams/workflow.svg" width="960" height="370" alt="Capture on a Galaxy A52s, recognition and intent resolution on the server, and speech playback on the handset.">
+        </picture>
+        <figcaption>VACA captures microphone audio after a tap on the Galaxy A52s. The server runs Faster Whisper with Whisper Small INT8, then passes the transcript to Home Assistant Assist. Assist resolves a room command or an answer. Public knowledge questions can add a Wikipedia lookup and local Qwen3 4B Instruct generation.</figcaption>
+      </figure>
+      <p class="diagram-explanation">The speech bridge reuses saved audio or requests fresh MOSS-TTS-Nano synthesis. Home Assistant streams the result back to VACA on the same handset for playback. The server coordinates recognition, intent resolution, and reply delivery.</p>
+    </section>
+
     <section id="models" aria-labelledby="models-title">
       <div class="section-title"><h2 id="models-title">Model stack</h2></div>
       <dl class="model-list">
@@ -98,6 +110,18 @@
           <dd><strong>Custom openWakeWord classifier</strong><p>A TFLite model was tested on the phone. Hands-free wake is paused and the console uses tap-to-talk.</p><a href="https://github.com/dscripka/openWakeWord">Training framework</a></dd>
         </div>
       </dl>
+    </section>
+
+    <section id="synthesis" aria-labelledby="synthesis-title">
+      <div class="section-title"><h2 id="synthesis-title">Inside the streaming synthesis path</h2></div>
+      <figure class="system-figure">
+        <picture>
+          <source media="(max-width: 760px)" srcset="diagrams/synthesis-mobile.svg">
+          <img src="diagrams/synthesis.svg" width="960" height="566" alt="Saved PCM bypasses synthesis. A fresh phone reply uses INT8 MOSS-TTS-Nano and an FP32 audio codec before the server prepares the PCM for playback.">
+        </picture>
+        <figcaption>With Phone selected, the server normalizes the reply and checks saved PCM. A cache hit skips synthesis. A fresh reply sends up to 75 SentencePiece tokens to MOSS-TTS-Nano 100M on Android. Its INT8 dense layers generate audio tokens from the text and reference audio codes. The FP32 MOSS Audio Tokenizer Nano 20M decoder turns those tokens into PCM, decoding the first frame alone and then two frames at a time.</figcaption>
+      </figure>
+      <p class="diagram-explanation">The server resamples the PCM, applies pitch-preserving tempo and short-pause processing, and buffers the reply for playback. If the phone route fails before delivering answer PCM, the server can use its FP32 MOSS model even after a thinking cue has played. A failure after answer PCM starts ends the reply without replaying it.</p>
     </section>
 
     <section id="measurements" aria-labelledby="evidence-title">
