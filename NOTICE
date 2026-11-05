@@ -8,6 +8,14 @@ metrics, a headless Android service, authenticated loopback streaming and recove
 The Python runtime is fetched from that revision with a SHA-256 check at setup.
 https://github.com/OpenMOSS/MOSS-TTS-Nano
 
+Docker images retain this file and LICENSE under /app/. Android APKs include
+them under assets/licenses/.
+
+ONNX Runtime Android 1.20.0 is from Microsoft and is licensed under MIT.
+The APK includes its version-matched LICENSE and ThirdPartyNotices.txt under
+assets/licenses/onnxruntime-*; those notices retain their original text.
+https://github.com/microsoft/onnxruntime/tree/v1.20.0
+
 The Gradle wrapper is from Gradle, licensed under Apache-2.0.
 https://github.com/gradle/gradle
 

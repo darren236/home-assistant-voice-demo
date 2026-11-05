@@ -60,6 +60,8 @@ The bedside deployment uses VACA as the display and capture/playback client. Its
 
 ## Move synthesis to Android
 
+This path is experimental. The app compiles locally and in CI; provisioning and playback from a fresh installation have not yet been verified on a handset.
+
 Use an **ARM64 Android 10+ phone** with authorized USB debugging. The original deployment used a Galaxy A52s. The public app has a separate package, `com.darren236.bedsidevoice`, and only a headless synthesis service. It binds to loopback, requires a bearer token, and requires Android's privileged DUMP permission for ADB service startup. It has no microphone or account permission. Leave the server fallback running.
 
 ### 1. Convert a separate model bundle
@@ -74,11 +76,16 @@ This applies per-channel dynamic QInt8 to constant-weight MatMul/Gemm layers in 
 
 ### 2. Build the app
 
-Install Java 17 and Android SDK platform 35 plus Build Tools 34.0.0. Set `ANDROID_HOME` to your SDK and `JAVA_HOME` to Java 17. The checked-in wrapper pins Gradle 8.9 and verifies the distribution checksum; AGP, Kotlin and ONNX Runtime Android versions are pinned in the build files.
+On the host, install Java 17, Python 3.10+, and the Android SDK with platform 35, Build Tools 34.0.0 and Platform Tools (which supplies `adb`). Allow several additional GB for the SDK, Gradle downloads and build output.
+
+Set `ANDROID_HOME` to your SDK and `JAVA_HOME` to Java 17. The checked-in wrapper pins Gradle 8.9 and verifies the distribution checksum; AGP, Kotlin and ONNX Runtime Android versions are pinned in the build files.
 
 From the repo root:
 
 ```sh
+export PATH="$ANDROID_HOME/platform-tools:$PATH"
+adb version
+python3 --version
 mkdir -p .local/android-tmp
 export TMPDIR="$PWD/.local/android-tmp"
 export ANDROID_TMP="$TMPDIR"
@@ -87,7 +94,7 @@ cd android
 cd ..
 ```
 
-The debug APK is `android/app/build/outputs/apk/debug/app-debug.apk`. It is intended for ADB development, not app-store distribution. The app's source fingerprint and native runtime identity are included in its audio-cache identity. This reference removes the deployment's Galaxy-specific CPU affinity mask.
+The debug APK is `android/app/build/outputs/apk/debug/app-debug.apk`. It includes the project's licence and notices under `assets/licenses/`. It is intended for ADB development, not app-store distribution. The app's source fingerprint and native runtime identity are included in its audio-cache identity. This reference removes the deployment's Galaxy-specific CPU affinity mask.
 
 ### 3. Select and provision your phone
 

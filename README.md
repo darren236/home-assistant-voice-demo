@@ -4,9 +4,11 @@ A spare Android phone becomes a local Home Assistant voice console. Say “night
 
 The phone already had a screen, microphone and speaker. The interesting question was whether it could also synthesize a fresh reply quickly enough to be useful. That led to a split system: Home Assistant handles the home, while the phone does more of the speech work.
 
-![The bedside clock and turn trace during a spoken reply](media/preview.png)
-
 **[Try the replay](#see-a-turn)** · **[Build your own](#run-the-speech-stack)** · **[Read the measurements](results/README.md)**
+
+The server example is verified through real synthesis, recognition and a virtual light command. The Android service builds, but a fresh handset installation and playback have not yet been verified.
+
+![The bedside clock and turn trace during a spoken reply](media/preview.png)
 
 ## See a turn
 
@@ -67,4 +69,4 @@ On a Galaxy A52s, 24 warm INT8 replies produced first PCM in **279–360 ms** (m
 
 In 120 deployed turns with outgoing audio, capture end to first outgoing audio had a **1.22 s median** and **7.30 s 90th percentile**, sometimes ending at a thinking cue. The spread matters for everyday use. [The results](results/README.md) explain the timing boundaries, settings and small wake-word trial that led back to tap-to-talk.
 
-The model and codec come from OpenMOSS. This project's work is the Android service, incremental decoding, quantization, speech routing and playback integration. The reference Python path and Android app are licensed under [Apache-2.0](LICENSE); [NOTICE](NOTICE) records upstream attribution. Built by **darren236**.
+The model and codec come from OpenMOSS. This project's work is the Android service, incremental decoding, quantization, speech routing and playback integration. The project is licensed under [Apache-2.0](LICENSE); [NOTICE](NOTICE) records upstream and media attribution. Model weights are downloaded separately under their model licences. Built by **darren236**.

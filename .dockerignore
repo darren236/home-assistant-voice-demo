@@ -1,4 +1,6 @@
 *
 !requirements.txt
+!LICENSE
+!NOTICE
 !bedside_voice/
 !bedside_voice/*.py

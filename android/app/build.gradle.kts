@@ -27,6 +27,12 @@ android {
         jvmTarget = "17"
     }
     sourceSets.getByName("main").assets.srcDir(layout.buildDirectory.dir("generated/bedsideAssets"))
+    sourceSets.getByName("main").assets.srcDir(layout.buildDirectory.dir("generated/bedsideLegal"))
+}
+
+val copyProjectNotices by tasks.registering(Copy::class) {
+    from(rootProject.file("../LICENSE"), rootProject.file("../NOTICE"))
+    into(layout.buildDirectory.dir("generated/bedsideLegal/licenses"))
 }
 
 val writeRenderIdentity by tasks.registering {
@@ -47,7 +53,7 @@ val writeRenderIdentity by tasks.registering {
         }
     }
 }
-tasks.named("preBuild").configure { dependsOn(writeRenderIdentity) }
+tasks.named("preBuild").configure { dependsOn(writeRenderIdentity, copyProjectNotices) }
 
 
 dependencies { implementation("com.microsoft.onnxruntime:onnxruntime-android:1.20.0") }
