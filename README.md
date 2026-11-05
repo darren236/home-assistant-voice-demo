@@ -4,10 +4,9 @@ A Home Assistant voice console built on a spare Galaxy A52s. **Whisper Small INT
 
 ## From a spoken request to a reply
 
-<picture>
-  <source media="(max-width: 760px)" srcset="site/diagrams/workflow-mobile.svg">
-  <img src="site/diagrams/workflow.svg" alt="Three stages show capture on a Galaxy A52s, recognition and intent resolution on the server, and speech playback on the handset.">
-</picture>
+![Capture on a Galaxy A52s, recognition and intent resolution on the server, and speech playback on the handset.](media/workflow.png)
+
+[Full-size diagram](media/workflow.png) · [Mobile layout](media/workflow-mobile.png) · [Editable SVG](site/diagrams/workflow.svg)
 
 VACA captures microphone audio after a tap on the Galaxy A52s. The server runs Faster Whisper with the Whisper Small INT8 model, then passes the transcript to Home Assistant Assist to resolve a room command or an answer. Public knowledge questions can add a Wikipedia lookup and local Qwen3 4B Instruct generation.
 
@@ -36,10 +35,9 @@ The reply goes through the speech bridge, which can reuse saved audio or request
 
 ## Inside the streaming synthesis path
 
-<picture>
-  <source media="(max-width: 760px)" srcset="site/diagrams/synthesis-mobile.svg">
-  <img src="site/diagrams/synthesis.svg" alt="The server checks saved audio before sending text tokens to Android. MOSS-TTS-Nano generates audio tokens and its codec decodes PCM, which returns through the server for handset playback.">
-</picture>
+![The server checks saved audio, MOSS-TTS-Nano generates audio tokens, and its codec decodes PCM for handset playback.](media/synthesis.png)
+
+[Full-size diagram](media/synthesis.png) · [Mobile layout](media/synthesis-mobile.png) · [Editable SVG](site/diagrams/synthesis.svg)
 
 With Phone selected, the server normalizes the reply and checks its saved PCM bank. A cache hit skips synthesis. For a fresh reply, the server sends up to 75 SentencePiece tokens to the warm Android model. MOSS-TTS-Nano 100M uses INT8 dense layers to generate audio tokens from the text and reference audio codes. The MOSS Audio Tokenizer Nano 20M decoder stays FP32 and turns those tokens into PCM, decoding the first frame alone and then two frames at a time.
 
@@ -61,6 +59,6 @@ Two handset microphone replays illustrate the timing boundaries. Capture end to 
 
 ## Source and assets
 
-`site/` is the complete static demo. Its HTML, CSS, JavaScript, and MP3s run from the extracted folder or any static host. `site/turns.js` contains the captions and playback timestamps. `site/diagrams/` contains the editable SVG figures, with desktop and stacked mobile layouts. The project measurements above come from recorded deployment and component tests, separate from the browser replay.
+`site/` is the complete static demo. Its HTML, CSS, JavaScript, and MP3s run from the extracted folder or any static host. `site/turns.js` contains the captions and playback timestamps. `site/diagrams/` contains the editable SVG figures, with desktop and stacked mobile layouts. The README uses PNG exports in `media/`. The project measurements above come from recorded deployment and component tests, separate from the browser replay.
 
 Built by **darren236**. [Home Assistant Assist](https://www.home-assistant.io/voice_control/voice_remote_local_assistant/) · [VACA](https://github.com/msp1974/ViewAssist_Companion_App) · [OpenMOSS](https://github.com/OpenMOSS/MOSS-TTS-Nano)
