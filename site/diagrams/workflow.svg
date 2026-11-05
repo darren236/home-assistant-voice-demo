@@ -1,45 +1,51 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="960" height="370" viewBox="0 0 960 370" role="img" aria-labelledby="title description">
-  <title id="title">From a spoken request to a reply</title>
-  <desc id="description">A. A Galaxy A52s captures audio for Whisper Small INT8 on the server. B. Home Assistant Assist resolves the transcript into an action or answer. C. The speech bridge sends saved audio or MOSS-TTS-Nano output back to the handset speaker.</desc>
-  <defs>
-    <marker id="arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L8 4L0 8" fill="none" stroke="#607269"/></marker>
-    <style>
-      text { font-family: system-ui, sans-serif; fill: #1e2926; font-size: 18px; }
-      .detail { fill: #4d5b56; font-size: 16px; }
-      .heading { font-weight: 600; }
-      .rule { stroke: #d7dfdb; stroke-width: 1; }
-      .flow { stroke: #607269; stroke-width: 1.5; fill: none; marker-end: url(#arrow); }
-    </style>
-  </defs>
-  <rect width="960" height="370" fill="#ffffff"/>
-  <path class="rule" d="M16 48H944M320 16V326M640 16V326"/>
-  <text class="heading" x="24" y="31">A  Capture</text>
-  <text class="heading" x="344" y="31">B  Resolve</text>
-  <text class="heading" x="664" y="31">C  Speak</text>
-  <text class="heading" x="24" y="85">Galaxy A52s</text>
-  <text class="detail" x="24" y="111">Tap to talk in VACA</text>
-  <path class="flow" d="M44 132V165"/>
-  <text class="detail" x="60" y="154">Microphone audio</text>
-  <rect x="16" y="182" width="286" height="70" fill="#e8f1ed"/>
-  <text class="heading" x="24" y="210">Whisper Small INT8</text>
-  <text class="detail" x="24" y="236">Faster Whisper · server CPU</text>
-  <text class="detail" x="24" y="301">Output · transcript to Assist</text>
-  <text class="heading" x="344" y="85">Home Assistant Assist</text>
-  <text class="detail" x="344" y="111">Receives the transcript</text>
-  <path class="flow" d="M364 132V165"/>
-  <text class="detail" x="380" y="154">Resolve the intent</text>
-  <text class="heading" x="344" y="210">Room action or answer</text>
-  <text class="detail" x="344" y="236">Public Q&amp;A can use Wikipedia</text>
-  <text class="detail" x="344" y="260">and Qwen3 4B Instruct</text>
-  <text class="detail" x="344" y="311">Output · reply text</text>
-  <text class="heading" x="664" y="85">Speech bridge</text>
-  <text class="detail" x="664" y="111">Saved PCM or MOSS-TTS-Nano</text>
-  <path class="flow" d="M684 132V165"/>
-  <text class="detail" x="700" y="154">Streamed reply audio</text>
-  <rect x="656" y="182" width="288" height="70" fill="#e8f1ed"/>
-  <text class="heading" x="664" y="210">Galaxy A52s speaker</text>
-  <text class="detail" x="664" y="236">Home Assistant → VACA playback</text>
-  <text class="detail" x="664" y="301">Playback ends the turn</text>
-  <path class="rule" d="M16 332H944"/>
-  <text class="detail" x="24" y="358">Deployed workflow, shown schematically. The handset handles capture and playback.</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="466" viewBox="0 0 960 466" role="img" aria-labelledby="title description">
+<title id="title">From a spoken request to a reply</title>
+<desc id="description">Phone and server lanes show VACA capture, server Whisper and Assist, server routing, phone INT8 MOSS synthesis and handset playback. Saved audio and server FP32 synthesis can bypass phone inference.</desc>
+<defs>
+<marker id="arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L8 4L0 8" fill="none" stroke="#607269"/></marker>
+<style>text { font-family: system-ui, sans-serif; fill: #1e2926; font-size: 18px; }
+.detail { fill: #4d5b56; font-size: 16px; }
+.heading { font-weight: 600; }
+.rule { stroke: #d7dfdb; stroke-width: 1; }
+.flow { stroke: #607269; stroke-width: 1.5; fill: none; marker-end: url(#arrow); }
+.fallback { stroke-dasharray: 5 4; }</style>
+</defs>
+<rect width="960" height="466" fill="#ffffff"/>
+<text class="heading" x="24" y="30">Phone · Galaxy A52s</text>
+<text class="heading" x="300" y="278">Server</text>
+<path class="rule" d="M16 240H944"/>
+<rect x="24" y="52" width="240" height="100" fill="#e8f1ed" stroke="#d7dfdb"/>
+<text class="heading" x="36" y="80">A · Capture</text>
+<text class="detail" x="36" y="104">VACA microphone</text>
+<rect x="380" y="52" width="240" height="100" fill="#e8f1ed" stroke="#d7dfdb"/>
+<text class="heading" x="392" y="80">C · Synthesize</text>
+<text class="detail" x="392" y="104">MOSS-TTS-Nano 100M</text>
+<text class="detail" x="392" y="128">INT8 dense layers</text>
+<rect x="700" y="52" width="236" height="100" fill="#e8f1ed" stroke="#d7dfdb"/>
+<text class="heading" x="712" y="80">Playback</text>
+<text class="detail" x="712" y="104">VACA speaker</text>
+<rect x="24" y="292" width="240" height="110" fill="#ffffff" stroke="#d7dfdb"/>
+<text class="heading" x="36" y="320">Whisper Small INT8</text>
+<text class="detail" x="36" y="344">Faster Whisper · CPU</text>
+<text class="detail" x="36" y="368">Audio → transcript</text>
+<rect x="300" y="292" width="250" height="110" fill="#ffffff" stroke="#d7dfdb"/>
+<text class="heading" x="312" y="320">B · Resolve</text>
+<text class="detail" x="312" y="344">Home Assistant Assist</text>
+<text class="detail" x="312" y="368">Room action or answer</text>
+<rect x="590" y="292" width="346" height="110" fill="#ffffff" stroke="#d7dfdb"/>
+<text class="heading" x="602" y="320">Server speech bridge</text>
+<text class="detail" x="602" y="344">Routes saved PCM or phone INT8</text>
+<text class="detail" x="602" y="368">Server FP32 as needed</text>
+<path class="flow" d="M144 152V292"/>
+<text class="detail" x="156" y="208">Audio</text>
+<path class="flow" d="M264 347H300"/>
+<path class="flow" d="M550 347H590"/>
+<path class="flow" d="M650 292V194H470V152"/>
+<text class="detail" x="350" y="185">Text tokens</text>
+<path class="flow" d="M550 152V226H730V292"/>
+<text class="detail" x="686" y="218">PCM</text>
+<path class="flow" d="M840 292V152"/>
+<text class="detail" x="850" y="208">Reply audio</text>
+<path class="rule" d="M16 422H944"/>
+<text class="detail" x="24" y="449">Green marks handset work. The server coordinates recognition, actions and reply delivery.</text>
 </svg>

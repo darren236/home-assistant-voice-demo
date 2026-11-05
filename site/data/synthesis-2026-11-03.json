@@ -1,0 +1,68 @@
+{
+  "date": "2026-11-03",
+  "device": "Samsung Galaxy A52s",
+  "scope": "Silent Android CPU synthesis; no tempo/pause DSP or speaker playback. Synthetic fixtures only.",
+  "upstream_source_revision": "8b7bcc9341b3b4ef3a3a58ba1338a7d85ff133eb",
+  "tts_model": {
+    "id": "OpenMOSS-Team/MOSS-TTS-Nano-100M-ONNX",
+    "revision": "f52645cb467506d8e18e746ddd59482685b74e58",
+    "dense_layers": "INT8"
+  },
+  "codec_model": {
+    "id": "OpenMOSS-Team/MOSS-Audio-Tokenizer-Nano-ONNX",
+    "revision": "ceff0d0749bfb3fa2d61149794ec6feef0d1e1ae",
+    "decoder": "FP32"
+  },
+  "configuration": {
+    "threads": 3,
+    "spinning": true,
+    "codec_batch_floor": 2,
+    "replies": 24,
+    "completed": true
+  },
+  "first_pcm_ms": {
+    "min": 279,
+    "median": 288.0,
+    "max": 360
+  },
+  "first_signal_chunk_ms": {
+    "min": 279,
+    "median": 288.0,
+    "max": 416
+  },
+  "first_signal_chunk_definition": "First generated chunk with a PCM sample whose absolute normalized amplitude exceeds 0.005. No speaker measurement.",
+  "native_rtf": {
+    "min": 0.838,
+    "median": 0.942,
+    "max": 1.004
+  },
+  "rtf_definition": "generation_ms / native_audio_ms, before host tempo, pause processing and protective tail",
+  "extra_buffer_at_1_10_tempo_ms": {
+    "min": 50.892,
+    "median": 62.099,
+    "max": 169.004
+  },
+  "by_repeat": [
+    {
+      "repeat": 1,
+      "rtf_median": 0.904,
+      "first_pcm_median_ms": 295.5
+    },
+    {
+      "repeat": 2,
+      "rtf_median": 0.956,
+      "first_pcm_median_ms": 290.5
+    },
+    {
+      "repeat": 3,
+      "rtf_median": 0.954,
+      "first_pcm_median_ms": 291.5
+    },
+    {
+      "repeat": 4,
+      "rtf_median": 0.946,
+      "first_pcm_median_ms": 285.0
+    }
+  ],
+  "provenance": "Aggregate copied from the recorded Android component benchmark. Per-reply audio and raw device logs are maintained in the operational project."
+}

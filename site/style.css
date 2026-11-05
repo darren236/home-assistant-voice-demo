@@ -60,7 +60,7 @@ main > section { margin-bottom: 34px; }
   min-height: 226px; padding: 14px; border-radius: 6px;
   background: #202826; color: #f1f4f2; transition: background-color .2s;
 }
-.console[data-light="night"] { background: #272820; }
+.console[data-light="night"] { background: #121712; }
 .console-status, .console-controls { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .console-status { font-size: .8rem; color: #c1cdc7; }
 #phone-phase { color: #f1f4f2; font-weight: 600; }
@@ -104,6 +104,7 @@ main > section { margin-bottom: 34px; }
 .trace strong, .trace small { display: block; font-size: .82rem; line-height: 1.36; }
 .trace small, .fallback { color: var(--muted); }
 .caption { margin-top: 8px; color: var(--muted); font-size: .8rem; }
+.caption:empty { margin-top: 0; }
 
 .model-list { margin: 0; border-top: 1px solid var(--line); }
 .model-list > div {
@@ -116,7 +117,7 @@ main > section { margin-bottom: 34px; }
 .model-list a { display: inline-block; margin-top: 3px; font-size: .81rem; }
 .measurements { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
 .measurements article { padding-top: 10px; border-top: 1px solid var(--line); }
-.measurements h3 + p { margin-top: 5px; font-size: .875rem; }
+.measurements article > p:not(.caption) { margin-top: 5px; font-size: .875rem; }
 .system-figure { margin: 0; }
 .system-figure picture { display: block; }
 .system-figure img { display: block; width: 100%; height: auto; }

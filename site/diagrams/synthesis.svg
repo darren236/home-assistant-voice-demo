@@ -1,45 +1,57 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="960" height="566" viewBox="0 0 960 566" role="img" aria-labelledby="title description">
-  <title id="title">Inside the streaming synthesis path</title>
-  <desc id="description">The server normalizes Assist reply text and checks saved PCM. On a cache miss, up to 75 SentencePiece tokens go to MOSS-TTS-Nano 100M on Android. Its INT8 dense layers generate audio tokens for the FP32 MOSS Audio Tokenizer Nano 20M decoder. Streamed PCM returns to the server for processing and buffering, then goes to the handset through Home Assistant and VACA.</desc>
-  <defs>
-    <marker id="arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L8 4L0 8" fill="none" stroke="#607269"/></marker>
-    <style>
-      text { font-family: system-ui, sans-serif; fill: #1e2926; font-size: 18px; }
-      .detail { fill: #4d5b56; font-size: 16px; }
-      .heading { font-weight: 600; }
-      .rule { stroke: #d7dfdb; }
-      .flow { stroke: #607269; stroke-width: 1.5; fill: none; marker-end: url(#arrow); }
-    </style>
-  </defs>
-  <rect width="960" height="566" fill="#ffffff"/>
-  <path class="rule" d="M16 12H944"/>
-  <text class="heading" x="24" y="39">Server · reply preparation</text>
-  <text class="heading" x="24" y="79">Assist reply text</text>
-  <text class="detail" x="24" y="105">Normalize wording</text>
-  <path class="flow" d="M348 87H416"/>
-  <text class="heading" x="452" y="79">Saved PCM lookup</text>
-  <text class="detail" x="452" y="105">Cache hit → saved audio to playback</text>
-  <path class="flow" d="M500 118V128H44V161"/>
-  <text class="detail" x="62" y="149">Cache miss on phone route · up to 75 SentencePiece tokens</text>
-  <rect x="16" y="178" width="928" height="167" fill="#e8f1ed"/>
-  <text class="heading" x="24" y="207">Galaxy A52s · OpenMOSS inference</text>
-  <text class="heading" x="24" y="250">MOSS-TTS-Nano 100M</text>
-  <text class="detail" x="24" y="279">INT8 dense layers</text>
-  <text class="detail" x="24" y="303">Reference audio codes</text>
-  <path class="flow" d="M292 263H382"/>
-  <text class="detail" x="304" y="245">Audio tokens</text>
-  <text class="heading" x="424" y="250">MOSS Audio Tokenizer Nano 20M</text>
-  <text class="detail" x="424" y="279">FP32 decoder</text>
-  <text class="detail" x="424" y="303">First frame alone, then batches of 2</text>
-  <path class="flow" d="M600 318V353H44V395"/>
-  <text class="detail" x="62" y="383">Streamed PCM</text>
-  <path class="rule" d="M16 411H944"/>
-  <text class="heading" x="24" y="439">Server · playback preparation</text>
-  <text class="heading" x="24" y="479">Process and buffer PCM</text>
-  <text class="detail" x="24" y="505">Resample, adjust tempo and short pauses</text>
-  <path class="flow" d="M412 486H466"/>
-  <text class="heading" x="500" y="479">Assist → VACA speaker</text>
-  <text class="detail" x="500" y="505">Stream the reply to the handset</text>
-  <path class="rule" d="M16 526H944"/>
-  <text class="detail" x="24" y="553">OpenMOSS supplies the model and codec. Cache, routing, and playback processing are project integration.</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="780" viewBox="0 0 960 780" role="img" aria-labelledby="title description">
+<title id="title">Inside the streaming synthesis path</title>
+<desc id="description">The server checks saved PCM on the phone route. A cache hit bypasses synthesis. Fresh replies use phone INT8 MOSS or host FP32 MOSS according to voice selection and token limit. Phone failure can fall back to FP32 before answer PCM. Fresh PCM is processed and buffered; cached final PCM goes straight to playback. Failure after answer PCM ends the reply.</desc>
+<defs>
+<marker id="arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L8 4L0 8" fill="none" stroke="#607269"/></marker>
+<style>text { font-family: system-ui, sans-serif; fill: #1e2926; font-size: 18px; }
+.detail { fill: #4d5b56; font-size: 16px; }
+.heading { font-weight: 600; }
+.rule { stroke: #d7dfdb; stroke-width: 1; }
+.flow { stroke: #607269; stroke-width: 1.5; fill: none; marker-end: url(#arrow); }
+.fallback { stroke-dasharray: 5 4; }</style>
+</defs>
+<rect width="960" height="780" fill="#ffffff"/>
+<text class="heading" x="24" y="28">Server · Assist reply text</text>
+<rect x="24" y="44" width="230" height="76" fill="#ffffff" stroke="#d7dfdb"/>
+<text class="heading" x="36" y="72">Voice source setting</text>
+<text class="detail" x="36" y="96">Phone / Server</text>
+<rect x="310" y="44" width="230" height="76" fill="#ffffff" stroke="#d7dfdb"/>
+<text class="heading" x="322" y="72">Saved PCM lookup</text>
+<text class="detail" x="322" y="96">Phone route only</text>
+<path class="flow" d="M254 82H310"/>
+<text class="detail" x="260" y="66">Phone</text>
+<path class="flow" d="M540 82H948V640H936"/>
+<text class="detail" x="624" y="72">Hit · final saved PCM</text>
+<path class="flow" d="M139 120V244"/>
+<text class="detail" x="154" y="184">Server selected</text>
+<path class="flow" d="M425 120V211H666V244"/>
+<text class="detail" x="520" y="202">Miss · at most 75 tokens</text>
+<path class="flow" d="M500 120V225H187V244"/>
+<text class="detail" x="230" y="217">Over 75 tokens</text>
+<rect x="396" y="244" width="540" height="220" fill="#e8f1ed" stroke="#d7dfdb"/>
+<text class="heading" x="408" y="272">Galaxy A52s · OpenMOSS inference</text>
+<text class="detail" x="408" y="296">MOSS-TTS-Nano 100M · INT8 dense layers</text>
+<text class="detail" x="408" y="320">Text + reference codes → audio tokens</text>
+<text class="detail" x="408" y="344">MOSS Audio Tokenizer Nano 20M · FP32</text>
+<text class="detail" x="408" y="368">First codec frame alone, then batches of 2</text>
+<text class="detail" x="408" y="392">Output · streamed PCM</text>
+<rect x="24" y="244" width="326" height="220" fill="#ffffff" stroke="#d7dfdb"/>
+<text class="heading" x="36" y="272">Server · OpenMOSS inference</text>
+<text class="detail" x="36" y="296">MOSS-TTS-Nano 100M · FP32</text>
+<text class="detail" x="36" y="320">FP32 audio codec</text>
+<text class="detail" x="36" y="344">Output · streamed PCM</text>
+<path class="flow fallback" d="M666 464V502H187V464"/>
+<text class="detail" x="222" y="526">Phone failure before answer PCM → server</text>
+<path class="flow" d="M155 464V594"/>
+<path class="flow" d="M810 464V556H460V594"/>
+<rect x="24" y="594" width="540" height="92" fill="#ffffff" stroke="#d7dfdb"/>
+<text class="heading" x="36" y="622">Server · process and buffer PCM</text>
+<text class="detail" x="36" y="646">Resample · tempo 1.10 · short pauses</text>
+<rect x="650" y="594" width="286" height="92" fill="#e8f1ed" stroke="#d7dfdb"/>
+<text class="heading" x="662" y="622">Handset playback</text>
+<text class="detail" x="662" y="646">Home Assistant → VACA</text>
+<path class="flow" d="M564 640H650"/>
+<path class="rule" d="M16 706H944"/>
+<text class="detail" x="24" y="733">Fresh replies may start with a thinking cue. After answer PCM, failure ends the reply without replay.</text>
+<text class="detail" x="24" y="759">OpenMOSS supplies the models. Routing, conversion, scheduling and playback are project work.</text>
 </svg>

@@ -14,6 +14,7 @@ let running = false;
 let generation = 0;
 let step = -1;
 let animation = 0;
+let stallTimer = 0;
 
 function scenario() {
   return turns[selected];
@@ -52,6 +53,8 @@ function stop(completed = false) {
   running = false;
   cancelAnimationFrame(animation);
   animation = 0;
+  clearTimeout(stallTimer);
+  stallTimer = 0;
   audio.pause();
   if (audio.readyState > 0) audio.currentTime = 0;
   setPhase("ready", "Ready");
@@ -66,7 +69,7 @@ function select(name) {
   selected = name;
   stop();
   audio.src = `audio/${name}.mp3`;
-  el("play-error").hidden = true;
+  el("play-error").textContent = "";
   el("fallback-option").hidden = name !== "sky";
   scenarioButtons.forEach((button) => {
     button.setAttribute("aria-pressed", String(button.dataset.scenario === name));
@@ -91,10 +94,13 @@ function showAt(seconds) {
   }
 }
 
-function playWithoutAudio(token) {
+function playWithoutAudio(token, offset = audio.currentTime) {
   if (token !== generation || animation) return;
-  el("play-error").hidden = false;
-  const started = performance.now();
+  audio.pause();
+  clearTimeout(stallTimer);
+  stallTimer = 0;
+  el("play-error").textContent = "Audio playback is unavailable. Continuing the visual replay. Play again to retry the audio.";
+  const started = performance.now() - offset * 1000;
   function advance(now) {
     if (token !== generation) return;
     const seconds = (now - started) / 1000;
@@ -108,6 +114,21 @@ function playWithoutAudio(token) {
   animation = requestAnimationFrame(advance);
 }
 
+function watchAudio() {
+  if (!running || animation || stallTimer) return;
+  const token = generation;
+  const position = audio.currentTime;
+  stallTimer = setTimeout(() => {
+    stallTimer = 0;
+    if (token !== generation) return;
+    if (audio.currentTime <= position) {
+      playWithoutAudio(token, position);
+    } else {
+      watchAudio();
+    }
+  }, 6000);
+}
+
 play.addEventListener("click", () => {
   if (running) {
     stop();
@@ -116,24 +137,33 @@ play.addEventListener("click", () => {
 
   const token = ++generation;
   running = true;
-  el("play-error").hidden = true;
+  el("play-error").textContent = "";
   el("announcement").textContent = "";
   el("play-icon").textContent = "■";
   el("play-label").textContent = "Stop";
   setLights(false);
   showAt(0);
   audio.muted = !sound.checked;
+  if (audio.error) audio.load();
+  watchAudio();
   audio.play().catch(() => playWithoutAudio(token));
 });
 
 audio.addEventListener("timeupdate", () => {
-  if (running && !audio.paused) showAt(audio.currentTime);
+  if (running && !animation && !audio.paused) showAt(audio.currentTime);
 });
 audio.addEventListener("ended", () => {
-  if (running && audio.ended) stop(true);
+  if (running && !animation && audio.ended) stop(true);
 });
 audio.addEventListener("error", () => {
-  if (running && !animation) playWithoutAudio(generation);
+  if (running && audio.error) playWithoutAudio(generation);
+});
+audio.addEventListener("waiting", watchAudio);
+audio.addEventListener("stalled", watchAudio);
+audio.addEventListener("playing", () => {
+  clearTimeout(stallTimer);
+  stallTimer = 0;
+  if (animation) audio.pause();
 });
 
 sound.addEventListener("change", () => { audio.muted = !sound.checked; });

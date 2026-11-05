@@ -16,7 +16,9 @@
     <a class="wordmark" href="#top">Bedside Voice</a>
     <nav aria-label="Page sections">
       <a href="#demo">Replay</a>
+      <a href="#workflow">Workflow</a>
       <a href="#models">Models</a>
+      <a href="#synthesis">Synthesis</a>
       <a href="#measurements">Measurements</a>
     </nav>
   </header>
@@ -53,7 +55,7 @@
               </div>
             </div>
             <div class="console-effect"><span>Demo state</span><strong id="console-effect">Room lights at full brightness</strong></div>
-            <p class="caption" id="play-error" role="status" hidden>Audio playback is unavailable. The visual replay is still available.</p>
+            <p class="caption" id="play-error" role="status"></p>
             <audio id="turn-audio" preload="none"></audio>
           </div>
 
@@ -82,12 +84,12 @@
       <div class="section-title"><h2 id="workflow-title">From a spoken request to a reply</h2></div>
       <figure class="system-figure">
         <picture>
-          <source media="(max-width: 760px)" srcset="diagrams/workflow-mobile.svg">
-          <img src="diagrams/workflow.svg" width="960" height="370" alt="Capture on a Galaxy A52s, recognition and intent resolution on the server, and speech playback on the handset.">
+          <source media="(max-width: 760px)" srcset="diagrams/workflow-mobile.svg" width="360" height="934">
+          <img src="diagrams/workflow.svg" width="960" height="466" alt="Phone and server lanes show handset capture and synthesis, server recognition and intent resolution, and handset playback.">
         </picture>
         <figcaption>VACA captures microphone audio after a tap on the Galaxy A52s. The server runs Faster Whisper with Whisper Small INT8, then passes the transcript to Home Assistant Assist. Assist resolves a room command or an answer. Public knowledge questions can add a Wikipedia lookup and local Qwen3 4B Instruct generation.</figcaption>
       </figure>
-      <p class="diagram-explanation">The speech bridge reuses saved audio or requests fresh MOSS-TTS-Nano synthesis. Home Assistant streams the result back to VACA on the same handset for playback. The server coordinates recognition, intent resolution, and reply delivery.</p>
+      <p class="diagram-explanation">The handset captures, synthesizes on the phone route, and plays replies. The server speech bridge routes saved PCM, phone INT8 synthesis, or server FP32 synthesis, then sends the result through Home Assistant to VACA.</p>
     </section>
 
     <section id="models" aria-labelledby="models-title">
@@ -99,7 +101,7 @@
         </div>
         <div>
           <dt>Speech synthesis</dt>
-          <dd><strong>MOSS-TTS-Nano 100M + MOSS Audio Tokenizer Nano 20M</strong><p>ONNX Runtime generates audio on the phone CPU with INT8 dense layers and an FP32 codec. The server has an FP32 fallback. The phone emits the first decoded frame immediately, then batches two frames at a time.</p><a href="https://huggingface.co/OpenMOSS-Team/MOSS-TTS-Nano-100M-ONNX">Synthesis model</a> · <a href="https://huggingface.co/OpenMOSS-Team/MOSS-Audio-Tokenizer-Nano-ONNX">Audio codec</a></dd>
+          <dd><strong>MOSS-TTS-Nano 100M + MOSS Audio Tokenizer Nano 20M</strong><p>ONNX Runtime generates audio on the phone CPU with INT8 dense layers and an FP32 codec. The server has an FP32 fallback. The phone decodes the first frame alone, then batches two frames at a time.</p><a href="https://huggingface.co/OpenMOSS-Team/MOSS-TTS-Nano-100M-ONNX">Synthesis model</a> · <a href="https://huggingface.co/OpenMOSS-Team/MOSS-Audio-Tokenizer-Nano-ONNX">Audio codec</a></dd>
         </div>
         <div>
           <dt>Optional public Q&amp;A</dt>
@@ -116,12 +118,18 @@
       <div class="section-title"><h2 id="synthesis-title">Inside the streaming synthesis path</h2></div>
       <figure class="system-figure">
         <picture>
-          <source media="(max-width: 760px)" srcset="diagrams/synthesis-mobile.svg">
-          <img src="diagrams/synthesis.svg" width="960" height="566" alt="Saved PCM bypasses synthesis. A fresh phone reply uses INT8 MOSS-TTS-Nano and an FP32 audio codec before the server prepares the PCM for playback.">
+          <source media="(max-width: 760px)" srcset="diagrams/synthesis-mobile.svg" width="360" height="1220">
+          <img src="diagrams/synthesis.svg" width="960" height="780" alt="Saved PCM bypasses synthesis. Fresh replies use phone INT8 or server FP32. Phone failure can fall back before answer PCM, while later failure ends the reply.">
         </picture>
-        <figcaption>With Phone selected, the server normalizes the reply and checks saved PCM. A cache hit skips synthesis. A fresh reply sends up to 75 SentencePiece tokens to MOSS-TTS-Nano 100M on Android. Its INT8 dense layers generate audio tokens from the text and reference audio codes. The FP32 MOSS Audio Tokenizer Nano 20M decoder turns those tokens into PCM, decoding the first frame alone and then two frames at a time.</figcaption>
+        <figcaption>The deployed voice-source setting offers Phone and Server. On the Phone route, a saved PCM hit goes directly to playback. Fresh replies of up to 75 SentencePiece tokens use MOSS-TTS-Nano 100M with INT8 dense layers on Android. Its FP32 MOSS Audio Tokenizer Nano 20M codec decodes the first frame alone, then two frames at a time. Server selection or a longer reply uses the server's FP32 model.</figcaption>
       </figure>
       <p class="diagram-explanation">The server resamples the PCM, applies pitch-preserving tempo and short-pause processing, and buffers the reply for playback. If the phone route fails before delivering answer PCM, the server can use its FP32 MOSS model even after a thinking cue has played. A failure after answer PCM starts ends the reply without replaying it.</p>
+    </section>
+
+    <section id="engineering" aria-labelledby="engineering-title">
+      <div class="section-title"><h2 id="engineering-title">Project engineering</h2></div>
+      <p class="diagram-explanation">OpenMOSS supplies the speech model and codec. Faster Whisper supplies recognition, and Home Assistant supplies intent resolution. The project adds the Android speech service, INT8 conversion, incremental codec scheduling, saved PCM bank, phone/server routing, and streaming audio preparation.</p>
+      <p class="diagram-explanation">This repository contains the replay, diagrams, sample audio, and a sanitized synthesis measurement summary. The operational project maintains the Android service, speech proxy, conversion tools, and detailed deployment records.</p>
     </section>
 
     <section id="measurements" aria-labelledby="evidence-title">
@@ -129,8 +137,9 @@
       <div class="measurements">
         <article>
           <h3>On-phone synthesis</h3>
-          <p><strong>288 ms</strong> median to first PCM and <strong>0.942×</strong> median real-time factor across 24 warm INT8 replies. A factor below 1 means generation took less time than the duration of the audio.</p>
-          <p class="caption">Measured after input tokens arrived. The benchmark excludes recognition, network transit, and speaker playback.</p>
+          <p>Across 24 warm INT8 replies, first PCM arrived in <strong>279–360 ms</strong>, median <strong>288 ms</strong>. The first signal-bearing PCM chunk arrived in <strong>279–416 ms</strong>, median <strong>288 ms</strong>. First PCM can contain silence.</p>
+          <p>Native real-time factor was <strong>0.838–1.004×</strong>, median <strong>0.942×</strong>. It divides generation time by native audio duration, before the server's 1.10× tempo, pause processing, and protective tail. Recorded chunk arrivals at the faster playback pace needed up to <strong>169 ms</strong> extra startup buffer.</p>
+          <p class="caption">November 3, 2026. Three threads, CPU spinning, two-frame codec batches after the first frame. Signal detection uses a normalized sample-amplitude threshold of 0.005. Capture, network transit, and speaker onset are outside this component test. <a href="data/synthesis-2026-11-03.json">Measurement summary</a></p>
         </article>
         <article>
           <h3>Voice pipeline</h3>

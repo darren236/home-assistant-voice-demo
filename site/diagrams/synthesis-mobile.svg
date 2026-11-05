@@ -1,47 +1,62 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="360" height="908" viewBox="0 0 360 908" role="img" aria-labelledby="title description">
-  <title id="title">Inside the streaming synthesis path</title>
-  <desc id="description">Saved audio bypasses synthesis. A fresh phone reply uses MOSS-TTS-Nano with INT8 dense layers and the FP32 MOSS Audio Tokenizer Nano decoder. The server processes and buffers the streamed PCM before handset playback.</desc>
-  <defs>
-    <marker id="arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L8 4L0 8" fill="none" stroke="#607269"/></marker>
-    <style>
-      text { font-family: system-ui, sans-serif; fill: #1e2926; font-size: 18px; }
-      .detail { fill: #4d5b56; font-size: 16px; }
-      .heading { font-weight: 600; }
-      .rule { stroke: #d7dfdb; }
-      .flow { stroke: #607269; stroke-width: 1.5; fill: none; marker-end: url(#arrow); }
-    </style>
-  </defs>
-  <rect width="360" height="908" fill="#ffffff"/>
-  <text class="heading" x="16" y="30">Server · reply preparation</text>
-  <path class="rule" d="M16 43H344"/>
-  <text class="heading" x="16" y="76">Assist reply text</text>
-  <text class="detail" x="16" y="100">Normalize wording</text>
-  <path class="flow" d="M36 115V140"/>
-  <text class="heading" x="16" y="174">Saved PCM lookup</text>
-  <text class="detail" x="16" y="198">Hit → saved audio to playback</text>
-  <path class="flow" d="M36 216V245"/>
-  <text class="detail" x="52" y="237">Cache miss on phone route</text>
-  <text class="detail" x="16" y="272">Up to 75 SentencePiece tokens</text>
-  <rect x="8" y="292" width="344" height="302" fill="#e8f1ed"/>
-  <text class="heading" x="16" y="322">Galaxy A52s · inference</text>
-  <text class="heading" x="16" y="363">MOSS-TTS-Nano 100M</text>
-  <text class="detail" x="16" y="390">INT8 dense layers</text>
-  <text class="detail" x="16" y="414">Reference audio codes</text>
-  <path class="flow" d="M36 431V460"/>
-  <text class="detail" x="52" y="452">Audio tokens</text>
-  <text class="heading" x="16" y="494">MOSS Audio Tokenizer</text>
-  <text class="heading" x="16" y="519">Nano 20M · FP32 decoder</text>
-  <text class="detail" x="16" y="548">First frame alone,</text>
-  <text class="detail" x="16" y="572">then batches of 2</text>
-  <path class="flow" d="M36 610V639"/>
-  <text class="detail" x="52" y="631">Streamed PCM</text>
-  <text class="heading" x="16" y="673">Server · playback preparation</text>
-  <path class="rule" d="M16 685H344"/>
-  <text class="heading" x="16" y="719">Process and buffer PCM</text>
-  <text class="detail" x="16" y="744">Resample, adjust tempo</text>
-  <text class="detail" x="16" y="768">and short pauses</text>
-  <path class="flow" d="M36 784V813"/>
-  <text class="heading" x="16" y="847">Assist → VACA speaker</text>
-  <text class="detail" x="16" y="873">Stream the reply to the handset</text>
-  <text class="detail" x="16" y="900">Deployed phone route · schematic</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="360" height="1220" viewBox="0 0 360 1220" role="img" aria-labelledby="title description">
+<title id="title">Inside the streaming synthesis path</title>
+<desc id="description">The server checks saved PCM on the phone route. A cache hit bypasses synthesis. Fresh replies use phone INT8 MOSS or host FP32 MOSS according to voice selection and token limit. Phone failure can fall back to FP32 before answer PCM. Fresh PCM is processed and buffered; cached final PCM goes straight to playback. Failure after answer PCM ends the reply.</desc>
+<defs>
+<marker id="arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L8 4L0 8" fill="none" stroke="#607269"/></marker>
+<style>text { font-family: system-ui, sans-serif; fill: #1e2926; font-size: 18px; }
+.detail { fill: #4d5b56; font-size: 16px; }
+.heading { font-weight: 600; }
+.rule { stroke: #d7dfdb; stroke-width: 1; }
+.flow { stroke: #607269; stroke-width: 1.5; fill: none; marker-end: url(#arrow); }
+.fallback { stroke-dasharray: 5 4; }</style>
+</defs>
+<rect width="360" height="1220" fill="#ffffff"/>
+<text class="heading" x="24" y="28">Server · reply preparation</text>
+<rect x="24" y="42" width="294" height="76" fill="#ffffff" stroke="#d7dfdb"/>
+<text class="heading" x="36" y="70">Assist reply text</text>
+<text class="detail" x="36" y="94">Normalize wording</text>
+<path class="flow" d="M170 118V156"/>
+<rect x="24" y="156" width="294" height="76" fill="#ffffff" stroke="#d7dfdb"/>
+<text class="heading" x="36" y="184">Voice source setting</text>
+<text class="detail" x="36" y="208">Phone / Server</text>
+<path class="flow" d="M170 232V282"/>
+<text class="detail" x="190" y="264">Phone</text>
+<rect x="24" y="282" width="294" height="76" fill="#ffffff" stroke="#d7dfdb"/>
+<text class="heading" x="36" y="310">Saved PCM · phone route</text>
+<text class="detail" x="36" y="334">Hit goes straight to playback</text>
+<path class="flow" d="M318 320H344V1088H318"/>
+<path class="flow" d="M170 358V420"/>
+<text class="detail" x="24" y="393">Miss · at most 75 tokens</text>
+<path class="flow" d="M24 194H8V696H24"/>
+<path class="flow" d="M24 320H16V720H24"/>
+<rect x="24" y="420" width="294" height="148" fill="#e8f1ed" stroke="#d7dfdb"/>
+<text class="heading" x="36" y="448">Phone · OpenMOSS</text>
+<text class="detail" x="36" y="472">MOSS-TTS-Nano 100M · INT8</text>
+<text class="detail" x="36" y="496">Reference codes + text</text>
+<text class="detail" x="36" y="520">Audio Tokenizer Nano 20M</text>
+<text class="detail" x="36" y="544">FP32 codec · frame 1, then 2</text>
+<path class="flow" d="M318 530H332V916H318"/>
+<path class="flow fallback" d="M170 568V580H320V634H170V646"/>
+<text class="detail" x="24" y="602">Phone failure before answer PCM</text>
+<text class="detail" x="24" y="626">uses the server route</text>
+<rect x="24" y="646" width="294" height="148" fill="#ffffff" stroke="#d7dfdb"/>
+<text class="heading" x="36" y="674">Server · OpenMOSS FP32</text>
+<text class="detail" x="36" y="698">MOSS-TTS-Nano 100M</text>
+<text class="detail" x="36" y="722">FP32 audio codec</text>
+<text class="detail" x="36" y="746">Server selected, over 75 tokens,</text>
+<text class="detail" x="36" y="770">or pre-answer phone failure</text>
+<path class="flow" d="M170 794V806H302V854H170V866"/>
+<text class="detail" x="24" y="834">Fresh PCM from either route</text>
+<rect x="24" y="866" width="294" height="100" fill="#ffffff" stroke="#d7dfdb"/>
+<text class="heading" x="36" y="894">Server · process and buffer</text>
+<text class="detail" x="36" y="918">Resample · tempo 1.10</text>
+<text class="detail" x="36" y="942">Short-pause processing</text>
+<path class="flow" d="M170 966V978H8V1034H170V1050"/>
+<text class="detail" x="24" y="1005">Prepared audio or saved final PCM</text>
+<rect x="24" y="1050" width="294" height="76" fill="#e8f1ed" stroke="#d7dfdb"/>
+<text class="heading" x="36" y="1078">Handset playback</text>
+<text class="detail" x="36" y="1102">Home Assistant → VACA speaker</text>
+<path class="rule" d="M16 1144H344"/>
+<text class="detail" x="24" y="1174">Failure after answer PCM starts</text>
+<text class="detail" x="24" y="1198">→ Reply failed, without replay.</text>
 </svg>

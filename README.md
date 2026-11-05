@@ -4,11 +4,11 @@ A Home Assistant voice console built on a spare Galaxy A52s. **Whisper Small INT
 
 ## From a spoken request to a reply
 
-![Capture on a Galaxy A52s, recognition and intent resolution on the server, and speech playback on the handset.](media/workflow.png)
+![The handset captures, synthesizes and plays speech. The server transcribes, resolves intents and routes replies.](media/workflow-mobile.png)
 
 VACA captures microphone audio after a tap on the Galaxy A52s. The server runs Faster Whisper with the Whisper Small INT8 model, then passes the transcript to Home Assistant Assist to resolve a room command or an answer. Public knowledge questions can add a Wikipedia lookup and local Qwen3 4B Instruct generation.
 
-The reply goes through the speech bridge, which can reuse saved audio or request fresh MOSS-TTS-Nano synthesis. Home Assistant streams the result back to VACA on the same handset for playback. The phone handles capture and playback, while the server coordinates recognition, intent resolution, and reply delivery.
+The server's speech bridge routes the reply to saved audio, MOSS-TTS-Nano INT8 on the handset, or MOSS-TTS-Nano FP32 on the server. The handset handles capture, synthesis on the phone route, and playback. The server handles recognition, intent resolution, audio preparation, and delivery through Home Assistant.
 
 ## Models and where they run
 
@@ -27,29 +27,42 @@ The reply goes through the speech bridge, which can reuse saved audio or request
 
 ![The bedside clock and turn trace during a spoken reply](media/preview.png)
 
-- [Night Light](site/audio/night.mp3) uses a saved spoken confirmation and dims the simulated room.
+- [Night Light](site/audio/night.mp3) uses a saved spoken confirmation and sets the simulated room state to 10% warm white.
 - [Ask the time](site/audio/clock.mp3) illustrates the pre-generated clock bank.
 - [Ask a question](site/audio/sky.mp3) plays a thinking cue before a fresh answer. The phone-offline toggle illustrates server fallback with the same recording.
 
 ## Inside the streaming synthesis path
 
-![The server checks saved audio, MOSS-TTS-Nano generates audio tokens, and its codec decodes PCM for handset playback.](media/synthesis.png)
+![Saved audio bypasses synthesis. A fresh reply uses phone INT8 or server FP32 synthesis, then streams to the handset.](media/synthesis-mobile.png)
 
-With Phone selected, the server normalizes the reply and checks its saved PCM bank. A cache hit skips synthesis. For a fresh reply, the server sends up to 75 SentencePiece tokens to the warm Android model. MOSS-TTS-Nano 100M uses INT8 dense layers to generate audio tokens from the text and reference audio codes. The MOSS Audio Tokenizer Nano 20M decoder stays FP32 and turns those tokens into PCM, decoding the first frame alone and then two frames at a time.
+The deployed system has a voice-source setting with Phone and Server choices. With Phone selected, the server normalizes the reply and checks its saved PCM bank. A cache hit goes straight to playback. A fresh reply of up to 75 SentencePiece tokens goes to the warm Android model. MOSS-TTS-Nano 100M uses INT8 dense layers to generate audio tokens from text and reference audio codes. The FP32 MOSS Audio Tokenizer Nano 20M decoder reconstructs PCM, decoding the first frame alone and then two frames at a time.
 
-The server resamples the streamed PCM, applies pitch-preserving tempo and short-pause processing, and buffers it for Home Assistant playback. If the phone route fails before delivering answer PCM, the server can use its FP32 MOSS model even if a thinking cue has already played. A failure after answer PCM starts ends the reply without replaying it.
+Server selection, a reply above the phone token limit, or a phone failure before answer PCM uses the server's FP32 model. The server resamples fresh PCM, applies pitch-preserving tempo and short-pause processing, and buffers it for Home Assistant playback. A thinking cue may already have played before fallback. A failure after answer PCM starts ends the reply without replaying it.
 
 The saved bank holds **1,440 clock clips** and **82 common and volume confirmations**. These replies bypass live synthesis on the phone route. A fresh answer can play a short thinking cue while generation runs.
+
+## Project engineering
+
+OpenMOSS supplies the speech model and codec, Faster Whisper supplies recognition, and Home Assistant supplies intent resolution. The project builds the integration around these components.
+
+- An Android speech service with INT8 dense-layer conversion, a warm model, and incremental codec scheduling.
+- A Wyoming speech bridge with a saved PCM bank, text normalization, phone/server routing, and fallback before answer audio.
+- Streaming resampling, pitch-preserving tempo, guarded pause processing, and playback buffering.
+- Playback acknowledgements and a guard that limits wake detections during speech.
+
+This repository packages the replay, diagrams, sample audio, and a sanitized synthesis measurement summary. The operational project holds the Android service, speech proxy, conversion tools, and detailed deployment records.
 
 ## What was measured
 
 | Test | Result | Timing boundary |
 | --- | --- | --- |
-| Warm INT8 synthesis on the Galaxy A52s, 24 replies | **288 ms** median to first PCM. **0.942×** median real-time factor, range **0.838–1.004×**. | After input tokens arrive. Component benchmark without capture, network transit, or speaker playback. |
+| Warm INT8 synthesis on the Galaxy A52s, 24 replies | First PCM **279–360 ms**, median **288 ms**. Native real-time factor **0.838–1.004×**, median **0.942×**. | From input-token arrival. First PCM can contain silence. The RTF denominator is native generated audio duration, before tempo and pause processing. |
 | Voice pipeline, 120 turns with outgoing audio | **1.22 s** median and **7.30 s** at the 90th percentile. | End of capture to first outgoing audio, which can be the thinking cue. Mixed normal use and test replays. |
-| Wake-word detector, 20-clip offline replay | Original accepted 10/10 intended calls and 5/10 negatives. Trial accepted 8/10 intended calls and 0/10 negatives. | Small offline comparison. An unattended room false-wake rate has yet to be measured. |
+| Wake-word detector, 20-clip offline replay | The original deployed classifier detected 10/10 intended calls and falsely triggered on 5/10 negatives. The replacement trial detected 8/10 intended calls and falsely triggered on 0/10 negatives. | Small offline comparison. An unattended room false-wake rate has yet to be measured. |
 
-The optimized phone run used three threads with CPU spinning and two-frame codec batches after the first frame. The earlier FP32 run on the same phone took 1.70–1.89× audio duration across three replies. Precision, thread count, and codec scheduling differed between runs. A real-time factor below 1 means generation takes less time than the resulting audio. First PCM can contain silence.
+The [November 3 synthesis summary](site/data/synthesis-2026-11-03.json) records three threads, CPU spinning, and two-frame codec batches after the first frame. Its first signal-bearing PCM chunk arrived in **279–416 ms**, median **288 ms**. That boundary uses a normalized sample-amplitude threshold of 0.005. Speaker onset was outside this test.
+
+Native RTF is generation time divided by native audio duration, before the server's 1.10× tempo, pause processing, and protective tail. At the faster 1.10 playback pace, the recorded chunk arrivals needed at most **169 ms** of extra startup buffer. The earlier FP32 run took 1.70–1.89× native audio duration across three replies. Precision, thread count, and codec scheduling differed between runs.
 
 Two handset microphone replays illustrate the timing boundaries. Capture end to first outgoing audio took **1,295 ms** for a fresh reply with a cue and **1,064 ms** for a pre-generated clock reply. Bridge request to first answer PCM took **1,147 ms** and **7 ms**, respectively. Both received playback acknowledgements. Each route has one observation, and the two clocks start at different points.
 
