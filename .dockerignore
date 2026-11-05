@@ -1,0 +1,4 @@
+*
+!requirements.txt
+!bedside_voice/
+!bedside_voice/*.py

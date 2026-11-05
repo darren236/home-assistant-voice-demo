@@ -1,0 +1,45 @@
+# Linux host networking lets Home Assistant and optional adb forwarding use loopback.
+# These ports differ from common Wyoming defaults to coexist with existing services.
+services:
+  moss:
+    build: .
+    network_mode: host
+    restart: unless-stopped
+    init: true
+    environment:
+      BEDSIDE_DATA: /data
+      BEDSIDE_ROUTE: ${BEDSIDE_ROUTE:-server}
+    volumes:
+      - speech-data:/data
+    healthcheck:
+      test: [CMD, python, -m, bedside_voice, health]
+      interval: 30s
+      timeout: 5s
+      start_period: 90s
+      retries: 3
+  whisper:
+    image: rhasspy/wyoming-whisper:3.8.1
+    network_mode: host
+    restart: unless-stopped
+    init: true
+    command: [--uri, "tcp://127.0.0.1:10601", --model, small-int8, --language, en]
+    volumes:
+      - whisper-data:/data
+    healthcheck:
+      test: [CMD, python3, -c, "import socket; socket.create_connection(('127.0.0.1', 10601), 4).close()"]
+      interval: 10s
+      timeout: 5s
+      start_period: 120s
+      retries: 12
+  homeassistant:
+    profiles: [homeassistant]
+    image: ghcr.io/home-assistant/home-assistant:2026.10.4
+    network_mode: host
+    restart: unless-stopped
+    volumes:
+      - homeassistant-data:/config
+      - ./examples/home-assistant/configuration.yaml:/config/configuration.yaml:ro
+volumes:
+  speech-data:
+  whisper-data:
+  homeassistant-data:

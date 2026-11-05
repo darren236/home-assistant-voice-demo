@@ -1,0 +1,18 @@
+Bedside Voice
+Copyright 2026 darren236
+
+Android MossOnnxDemoEngine.kt derives from OpenMOSS/MOSS-TTS-Nano at
+8b7bcc9341b3b4ef3a3a58ba1338a7d85ff133eb, licensed under Apache-2.0.
+Changes include explicit reference codes, incremental codec state, streaming
+metrics, a headless Android service, authenticated loopback streaming and recovery.
+The Python runtime is fetched from that revision with a SHA-256 check at setup.
+https://github.com/OpenMOSS/MOSS-TTS-Nano
+
+The Gradle wrapper is from Gradle, licensed under Apache-2.0.
+https://github.com/gradle/gradle
+
+Model weights are downloaded separately from OpenMOSS-Team on Hugging Face;
+their model cards and licenses govern the weights. MOSS sample audio in site/audio
+was generated with public Ava/Nathan presets. It contains scripted speech and no
+household recording. No private voice reference, household configuration or model
+weights are included. Other dependencies retain their respective licenses.

@@ -1,73 +1,70 @@
 # Bedside Voice
 
-A Home Assistant voice console built on a spare Galaxy A52s. **Whisper Small INT8** transcribes speech on the home server. **MOSS-TTS-Nano 100M** streams replies from the phone CPU, with a full-precision server fallback.
+A spare Android phone becomes a local Home Assistant voice console. Say “night light,” ask the time, or ask a question; the phone captures your request and plays the reply. **Whisper Small INT8** handles recognition on the server. **MOSS-TTS-Nano 100M** can generate speech on the phone CPU, with a server fallback.
 
-## From a spoken request to a reply
-
-![The handset captures, synthesizes and plays speech. The server transcribes, resolves intents and routes replies.](media/workflow-mobile.png)
-
-VACA captures microphone audio after a tap on the Galaxy A52s. The server runs Faster Whisper with the Whisper Small INT8 model, then passes the transcript to Home Assistant Assist to resolve a room command or an answer. Public knowledge questions can add a Wikipedia lookup and local Qwen3 4B Instruct generation.
-
-The server's speech bridge routes the reply to saved audio, MOSS-TTS-Nano INT8 on the handset, or MOSS-TTS-Nano FP32 on the server. The handset handles capture, synthesis on the phone route, and playback. The server handles recognition, intent resolution, audio preparation, and delivery through Home Assistant.
-
-## Models and where they run
-
-| Job | Model | Use in this project |
-| --- | --- | --- |
-| Speech recognition | [Whisper Small INT8](https://huggingface.co/rhasspy/faster-whisper-small-int8) | English speech on the server CPU via [Faster Whisper](https://github.com/SYSTRAN/faster-whisper) and [Wyoming](https://www.home-assistant.io/integrations/wyoming/). |
-| Speech synthesis | [MOSS-TTS-Nano 100M ONNX](https://huggingface.co/OpenMOSS-Team/MOSS-TTS-Nano-100M-ONNX) | Primary bedside voice. The Android build quantizes dense layers to INT8. The server runs the FP32 graph for fallback. |
-| Audio codec | [MOSS Audio Tokenizer Nano 20M ONNX](https://huggingface.co/OpenMOSS-Team/MOSS-Audio-Tokenizer-Nano-ONNX) | Decodes generated audio tokens into PCM. The Android decoder stays FP32 and streams incremental chunks. |
-| Optional public Q&A | [Qwen3 4B Instruct](https://ollama.com/library/qwen3:4b-instruct) | Local Ollama can compose a short answer from retrieved Wikipedia passages. Direct extraction handles simpler questions. Home Assistant Assist resolves room commands. |
-| Wake-word trial | [Custom openWakeWord classifier](https://github.com/dscripka/openWakeWord) | TFLite on Android. Hands-free wake is paused after false triggers. Tap-to-talk is the active entry point. |
-| Separate phone Assist pipeline | [Piper `en_US-lessac-medium`](https://huggingface.co/rhasspy/piper-voices/tree/main/en/en_US/lessac/medium) | Server-side speech synthesis for standard phone Assist. The bedside console uses the MOSS pipeline. |
-
-## Try the replay
-
-[Download the ZIP](https://github.com/darren236/home-assistant-voice-demo/archive/refs/heads/main.zip), extract it, and open `site/index.html` in Chrome. The replay uses scripted device states and audio rendered with built-in MOSS-TTS-Nano voice presets.
+The phone already had a screen, microphone and speaker. The interesting question was whether it could also synthesize a fresh reply quickly enough to be useful. That led to a split system: Home Assistant handles the home, while the phone does more of the speech work.
 
 ![The bedside clock and turn trace during a spoken reply](media/preview.png)
 
-- [Night Light](site/audio/night.mp3) uses a saved spoken confirmation and sets the simulated room state to 10% warm white.
-- [Ask the time](site/audio/clock.mp3) illustrates the pre-generated clock bank.
-- [Ask a question](site/audio/sky.mp3) plays a thinking cue before a fresh answer. The phone-offline toggle illustrates server fallback with the same recording.
+**[Try the replay](#see-a-turn)** · **[Build your own](#run-the-speech-stack)** · **[Read the measurements](results/README.md)**
 
-## Inside the streaming synthesis path
+## See a turn
 
-![Saved audio bypasses synthesis. A fresh reply uses phone INT8 or server FP32 synthesis, then streams to the handset.](media/synthesis-mobile.png)
+[Download the ZIP](https://github.com/darren236/home-assistant-voice-demo/archive/refs/heads/main.zip), extract it, and open `site/index.html` in Chrome. Choose **Night light**, **Ask the time**, or **Ask a question**. Follow the transcript and model route while the audio plays.
 
-The deployed system has a voice-source setting with Phone and Server choices. With Phone selected, the server normalizes the reply and checks its saved PCM bank. A cache hit goes straight to playback. A fresh reply of up to 75 SentencePiece tokens goes to the warm Android model. MOSS-TTS-Nano 100M uses INT8 dense layers to generate audio tokens from text and reference audio codes. The FP32 MOSS Audio Tokenizer Nano 20M decoder reconstructs PCM, decoding the first frame alone and then two frames at a time.
+This is a scripted replay with public MOSS voice presets. The phone-offline switch illustrates fallback using the same recording. The runnable code below performs real inference.
 
-Server selection, a reply above the phone token limit, or a phone failure before answer PCM uses the server's FP32 model. The server resamples fresh PCM, applies pitch-preserving tempo and short-pause processing, and buffers it for Home Assistant playback. A thinking cue may already have played before fallback. A failure after answer PCM starts ends the reply without replaying it.
+## How a request travels
 
-The saved bank holds **1,440 clock clips** and **82 common and volume confirmations**. These replies bypass live synthesis on the phone route. A fresh answer can play a short thinking cue while generation runs.
+![The phone captures, synthesizes and plays speech; the server transcribes, resolves intents and routes replies.](media/workflow-mobile.png)
 
-## Project engineering
+“Night light” becomes text through Whisper. Home Assistant matches it to an intent, changes the light, and produces a short confirmation. The speech bridge decides how to deliver that confirmation; the handset plays the resulting audio. A room command can take this entire path without an LLM.
 
-OpenMOSS supplies the speech model and codec, Faster Whisper supplies recognition, and Home Assistant supplies intent resolution. The project builds the integration around these components.
-
-- An Android speech service with INT8 dense-layer conversion, a warm model, and incremental codec scheduling.
-- A Wyoming speech bridge with a saved PCM bank, text normalization, phone/server routing, and fallback before answer audio.
-- Streaming resampling, pitch-preserving tempo, guarded pause processing, and playback buffering.
-- Playback acknowledgements and a guard that limits wake detections during speech.
-
-This repository packages the replay, diagrams, sample audio, and a sanitized synthesis measurement summary. The operational project holds the Android service, speech proxy, conversion tools, and detailed deployment records.
-
-## What was measured
-
-| Test | Result | Timing boundary |
+| Component | Model | Why it is here |
 | --- | --- | --- |
-| Warm INT8 synthesis on the Galaxy A52s, 24 replies | First PCM **279–360 ms**, median **288 ms**. Native real-time factor **0.838–1.004×**, median **0.942×**. | From input-token arrival. First PCM can contain silence. The RTF denominator is native generated audio duration, before tempo and pause processing. |
-| Voice pipeline, 120 turns with outgoing audio | **1.22 s** median and **7.30 s** at the 90th percentile. | End of capture to first outgoing audio, which can be the thinking cue. Mixed normal use and test replays. |
-| Wake-word detector, 20-clip offline replay | The original deployed classifier detected 10/10 intended calls and falsely triggered on 5/10 negatives. The replacement trial detected 8/10 intended calls and falsely triggered on 0/10 negatives. | Small offline comparison. An unattended room false-wake rate has yet to be measured. |
+| Recognition · server CPU | [Whisper Small INT8](https://huggingface.co/rhasspy/faster-whisper-small-int8), via Faster Whisper | Keeps English recognition local. |
+| Speech · phone or server CPU | [MOSS-TTS-Nano 100M ONNX](https://huggingface.co/OpenMOSS-Team/MOSS-TTS-Nano-100M-ONNX) | Small enough to explore speech generation on a reused phone. Phone dense layers use INT8; the server keeps FP32. |
+| Audio decoding · alongside synthesis | [MOSS Audio Tokenizer Nano 20M ONNX](https://huggingface.co/OpenMOSS-Team/MOSS-Audio-Tokenizer-Nano-ONNX) | Turns generated audio tokens into PCM incrementally. The codec stays FP32. |
 
-The [November 3 synthesis summary](site/data/synthesis-2026-11-03.json) records three threads, CPU spinning, and two-frame codec batches after the first frame. Its first signal-bearing PCM chunk arrived in **279–416 ms**, median **288 ms**. That boundary uses a normalized sample-amplitude threshold of 0.005. Speaker onset was outside this test.
+The deployed console uses [VACA](https://github.com/msp1974/ViewAssist_Companion_App) for capture and playback. Its optional knowledge route adds Wikipedia and local Qwen3 4B Instruct. The reference build starts with Home Assistant's native intents and tap-to-talk.
 
-Native RTF is generation time divided by native audio duration, before the server's 1.10× tempo, pause processing, and protective tail. At the faster 1.10 playback pace, the recorded chunk arrivals needed at most **169 ms** of extra startup buffer. The earlier FP32 run took 1.70–1.89× native audio duration across three replies. Precision, thread count, and codec scheduling differed between runs.
+## Why replies take different routes
 
-Two handset microphone replays illustrate the timing boundaries. Capture end to first outgoing audio took **1,295 ms** for a fresh reply with a cue and **1,064 ms** for a pre-generated clock reply. Bridge request to first answer PCM took **1,147 ms** and **7 ms**, respectively. Both received playback acknowledgements. Each route has one observation, and the two clocks start at different points.
+![Saved PCM bypasses synthesis. Fresh replies use phone INT8 or server FP32 synthesis, then stream to the handset.](media/synthesis-mobile.png)
 
-## Source and assets
+A clock answer repeats every day; a fresh explanation does not. Saving completed speech removes generation from repeated replies. On a cache miss, the phone generates audio tokens and decodes the first frame immediately, then two frames at a time. Short chunks let playback begin while the rest of the sentence is still being generated.
 
-`site/` is the complete static demo. Its HTML, CSS, JavaScript, and MP3s run from the extracted folder or any static host. `site/turns.js` contains the captions and playback timestamps. `site/diagrams/` contains the editable SVG figures, with desktop and stacked mobile layouts. The README uses PNG exports in `media/`. The project measurements above come from recorded deployment and component tests, separate from the browser replay.
+A phone reply has a 75-token budget. Longer replies use the server. If the phone fails before sending answer PCM, the server takes over. Once answer PCM has started, a failure ends that reply: restarting it would repeat words the listener already heard. Those boundaries are implemented in [`server.py`](bedside_voice/server.py) and covered by routing tests.
 
-Built by **darren236**. [Home Assistant Assist](https://www.home-assistant.io/voice_control/voice_remote_local_assistant/) · [VACA](https://github.com/msp1974/ViewAssist_Companion_App) · [OpenMOSS](https://github.com/OpenMOSS/MOSS-TTS-Nano)
+The figures describe the deployed system, including its pre-generated bank and audio processing. The reference build below reproduces the speech split, incremental decoder, completed-reply cache and fallback. Its [scope and differences](SETUP.md#what-this-build-reproduces) are explicit.
+
+## Run the speech stack
+
+On an **x86-64 Linux host with Docker Compose v2**, allow roughly 4 GB free disk and start with 8 GB RAM. Internet is needed to fetch public models; inference then runs locally. No GPU, API key or private reference recording is required.
+
+```sh
+git clone https://github.com/darren236/home-assistant-voice-demo.git
+cd home-assistant-voice-demo
+docker compose build moss
+docker compose run --rm moss prepare
+docker compose up -d --wait moss whisper
+```
+
+Generate a real reply, then ask Whisper to transcribe it:
+
+```sh
+docker compose exec moss python -m bedside_voice say \
+  "The bedside light is on." --output /data/sample.wav
+docker compose exec moss python -m bedside_voice transcribe --input /data/sample.wav
+docker compose cp moss:/data/sample.wav ./sample.wav
+```
+
+You should get a complete WAV and a transcript of that sentence. This checks the two speech models without requiring a microphone or changing a device. Then [connect Home Assistant and try the virtual bedside light](SETUP.md#connect-home-assistant), or [build the Android synthesis service](SETUP.md#move-synthesis-to-android). The repository includes the app source, INT8 conversion and device provisioning tool.
+
+## What the phone achieved
+
+On a Galaxy A52s, 24 warm INT8 replies produced first PCM in **279–360 ms** (median **288 ms**) and a native real-time factor of **0.838–1.004×**. A value below 1 means generation was faster than the audio's native playback duration. First PCM can contain silence; this does not measure when the speaker becomes audible.
+
+In 120 deployed turns with outgoing audio, capture end to first outgoing audio had a **1.22 s median** and **7.30 s 90th percentile**, sometimes ending at a thinking cue. The spread matters for everyday use. [The results](results/README.md) explain the timing boundaries, settings and small wake-word trial that led back to tap-to-talk.
+
+The model and codec come from OpenMOSS. This project's work is the Android service, incremental decoding, quantization, speech routing and playback integration. The reference Python path and Android app are licensed under [Apache-2.0](LICENSE); [NOTICE](NOTICE) records upstream attribution. Built by **darren236**.

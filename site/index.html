@@ -19,6 +19,7 @@
       <a href="#workflow">Workflow</a>
       <a href="#models">Models</a>
       <a href="#synthesis">Synthesis</a>
+      <a href="#build">Build it</a>
       <a href="#measurements">Measurements</a>
     </nav>
   </header>
@@ -129,7 +130,14 @@
     <section id="engineering" aria-labelledby="engineering-title">
       <div class="section-title"><h2 id="engineering-title">Project engineering</h2></div>
       <p class="diagram-explanation">OpenMOSS supplies the speech model and codec. Faster Whisper supplies recognition, and Home Assistant supplies intent resolution. The project adds the Android speech service, INT8 conversion, incremental codec scheduling, saved PCM bank, phone/server routing, and streaming audio preparation.</p>
-      <p class="diagram-explanation">This repository contains the replay, diagrams, sample audio, and a sanitized synthesis measurement summary. The operational project maintains the Android service, speech proxy, conversion tools, and detailed deployment records.</p>
+      <p class="diagram-explanation">The repository includes a runnable CPU speech stack, the Android synthesis source, INT8 conversion, a completed-reply cache and fallback tests. Public model presets make the reference build independent of the household's voice recordings.</p>
+    </section>
+
+    <section id="build" aria-labelledby="build-title">
+      <div class="section-title"><h2 id="build-title">Build your own</h2></div>
+      <p class="diagram-explanation">Start with Docker Compose on Linux. Generate a MOSS reply and transcribe it with Whisper before connecting a microphone or a device. Then connect Home Assistant's native intent pipeline and try the included virtual bedside light.</p>
+      <p class="diagram-explanation">An optional Android build moves synthesis to the phone. The reference uses the public Ava preset and native playback pace. The deployed setup shown in the figures also has a pre-generated phrase bank, tempo and pause processing, and optional knowledge answers.</p>
+      <p class="diagram-explanation"><a href="https://github.com/darren236/home-assistant-voice-demo#run-the-speech-stack">Run the speech stack</a> · <a href="https://github.com/darren236/home-assistant-voice-demo/blob/main/SETUP.md">Connect Home Assistant or Android</a></p>
     </section>
 
     <section id="measurements" aria-labelledby="evidence-title">

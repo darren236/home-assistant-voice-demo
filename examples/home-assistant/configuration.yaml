@@ -1,0 +1,49 @@
+# A virtual dimmable light. No physical device or cloud account is needed.
+default_config:
+input_boolean:
+  bedside_power:
+    name: Bedside power
+input_number:
+  bedside_brightness:
+    name: Bedside brightness
+    min: 0
+    max: 255
+    step: 1
+    initial: 255
+template:
+  - light:
+      - name: Bedside Light
+        unique_id: bedside_voice_example_light
+        state: "{{ is_state('input_boolean.bedside_power', 'on') }}"
+        level: "{{ states('input_number.bedside_brightness') | int(255) }}"
+        turn_on:
+          action: input_boolean.turn_on
+          target:
+            entity_id: input_boolean.bedside_power
+        turn_off:
+          action: input_boolean.turn_off
+          target:
+            entity_id: input_boolean.bedside_power
+        set_level:
+          - action: input_boolean.turn_on
+            target:
+              entity_id: input_boolean.bedside_power
+          - action: input_number.set_value
+            target:
+              entity_id: input_number.bedside_brightness
+            data:
+              value: "{{ brightness }}"
+conversation:
+  intents:
+    BedsideNightLight:
+      - "night light"
+intent_script:
+  BedsideNightLight:
+    action:
+      action: light.turn_on
+      target:
+        entity_id: light.bedside_light
+      data:
+        brightness_pct: 10
+    speech:
+      text: "Starting night light."

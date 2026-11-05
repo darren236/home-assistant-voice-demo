@@ -1,0 +1,32 @@
+name: Check reference implementation
+on: [push, pull_request]
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements.txt
+      - run: python -m unittest discover -s tests -v
+      - run: python -m compileall -q bedside_voice tools
+      - run: docker compose config --quiet
+      - name: Exercise the Home Assistant example
+        run: >-
+          docker run --rm --network none
+          -v "$PWD/examples/home-assistant:/example:ro"
+          -v "$PWD/tests/integration_home_assistant.py:/check.py:ro"
+          ghcr.io/home-assistant/home-assistant:2026.10.4 python /check.py
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - run: sdkmanager 'platforms;android-35' 'build-tools;34.0.0'
+      - run: ./gradlew --no-daemon :app:assembleDebug
+        working-directory: android

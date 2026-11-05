@@ -1,0 +1,13 @@
+.local/
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+.env
+*.wav
+*.onnx
+*.data
+*.apk
+android/.gradle/
+android/local.properties
+android/**/build/
