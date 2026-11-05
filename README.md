@@ -6,8 +6,6 @@ A Home Assistant voice console built on a spare Galaxy A52s. **Whisper Small INT
 
 ![Capture on a Galaxy A52s, recognition and intent resolution on the server, and speech playback on the handset.](media/workflow.png)
 
-[Full-size diagram](media/workflow.png) · [Mobile layout](media/workflow-mobile.png) · [Editable SVG](site/diagrams/workflow.svg)
-
 VACA captures microphone audio after a tap on the Galaxy A52s. The server runs Faster Whisper with the Whisper Small INT8 model, then passes the transcript to Home Assistant Assist to resolve a room command or an answer. Public knowledge questions can add a Wikipedia lookup and local Qwen3 4B Instruct generation.
 
 The reply goes through the speech bridge, which can reuse saved audio or request fresh MOSS-TTS-Nano synthesis. Home Assistant streams the result back to VACA on the same handset for playback. The phone handles capture and playback, while the server coordinates recognition, intent resolution, and reply delivery.
@@ -36,8 +34,6 @@ The reply goes through the speech bridge, which can reuse saved audio or request
 ## Inside the streaming synthesis path
 
 ![The server checks saved audio, MOSS-TTS-Nano generates audio tokens, and its codec decodes PCM for handset playback.](media/synthesis.png)
-
-[Full-size diagram](media/synthesis.png) · [Mobile layout](media/synthesis-mobile.png) · [Editable SVG](site/diagrams/synthesis.svg)
 
 With Phone selected, the server normalizes the reply and checks its saved PCM bank. A cache hit skips synthesis. For a fresh reply, the server sends up to 75 SentencePiece tokens to the warm Android model. MOSS-TTS-Nano 100M uses INT8 dense layers to generate audio tokens from the text and reference audio codes. The MOSS Audio Tokenizer Nano 20M decoder stays FP32 and turns those tokens into PCM, decoding the first frame alone and then two frames at a time.
 
