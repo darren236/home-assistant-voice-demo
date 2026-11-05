@@ -3,7 +3,7 @@ const turns = {
     "request": "Night light.",
     "reply": "Starting night light.",
     "intent": "Home Assistant runs the Night Light routine",
-    "route": "Play the saved confirmation",
+    "route": "Play the saved MOSS-TTS-Nano confirmation",
     "effect": "Room lights at full brightness",
     "timing": {
       "captureEnd": 1.22,
@@ -17,7 +17,7 @@ const turns = {
     "request": "What time is it?",
     "reply": "It is eight forty-two in the evening.",
     "intent": "Resolve the clock question",
-    "route": "Play the pre-generated clip for this minute",
+    "route": "Play the pre-generated MOSS-TTS-Nano clip for this minute",
     "effect": "Clock fixture \u00b7 8:42 PM",
     "timing": {
       "captureEnd": 2.42,
@@ -31,7 +31,7 @@ const turns = {
     "request": "Why is the sky blue?",
     "reply": "Sunlight scatters in the air. Blue light scatters more than red light.",
     "intent": "Look up a public source and form a short answer",
-    "route": "Play a thinking cue and stream a fresh answer from the phone",
+    "route": "Play a thinking cue, then stream MOSS-TTS-Nano from the phone",
     "effect": "Public knowledge question",
     "timing": {
       "captureEnd": 2.26,

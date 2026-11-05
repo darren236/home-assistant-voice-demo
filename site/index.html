@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="An interactive demo of a Home Assistant voice console built with local speech recognition, streaming speech synthesis, and a spare Android phone.">
+  <meta name="description" content="A Home Assistant voice console using Whisper Small INT8 and MOSS-TTS-Nano. Replay a sample and see where each model runs.">
   <meta name="color-scheme" content="light">
-  <title>Bedside Voice · A Home Assistant voice console</title>
+  <title>Bedside Voice · Home Assistant speech demo</title>
   <link rel="icon" href="voice.svg" type="image/svg+xml">
   <link rel="stylesheet" href="style.css">
   <script src="turns.js" defer></script>
@@ -13,143 +13,113 @@
 </head>
 <body>
   <header class="site-header wrap">
-    <a class="wordmark" href="#top"><span class="mark" aria-hidden="true">✦</span> Bedside Voice</a>
+    <a class="wordmark" href="#top">Bedside Voice</a>
     <nav aria-label="Page sections">
-      <a href="#demo">Try the demo</a>
-      <a href="#pipeline">How it works</a>
+      <a href="#demo">Replay</a>
+      <a href="#models">Models</a>
+      <a href="#measurements">Measurements</a>
     </nav>
   </header>
 
-  <main id="top">
-    <section class="hero wrap" aria-labelledby="title">
-      <div>
-        <p class="eyebrow">A Home Assistant project</p>
-        <h1 id="title">Bedside Voice</h1>
-        <p class="lede">A spare Android phone became a bedside voice console with local speech recognition, room controls, and spoken replies.</p>
-        <a class="button" href="#demo">Try a voice turn <span aria-hidden="true">↓</span></a>
-      </div>
-      <aside class="hero-note">
-        <p class="eyebrow"><span class="dot" aria-hidden="true"></span> On the bedside table</p>
-        <p>The console doubles as a clock. Tap the display to start a turn and speak a command or question.</p>
-      </aside>
-    </section>
+  <main id="top" class="wrap">
+    <div class="intro">
+      <h1>A bedside voice console</h1>
+      <p>A Galaxy A52s runs the display and streams spoken replies. A Home Assistant server transcribes requests with Whisper Small INT8 and handles room commands. MOSS-TTS-Nano synthesizes replies on the phone or server.</p>
+    </div>
 
-    <section class="demo wrap" id="demo" aria-labelledby="demo-title">
-      <div class="section-heading">
-        <div>
-          <p class="eyebrow">01 / Interactive demo</p>
-          <h2 id="demo-title">Follow a voice turn.</h2>
-        </div>
-        <p>Choose a sample to hear a synthetic exchange and see each pipeline stage. This replay uses scripted timing and simulated devices. It needs no microphone or Home Assistant connection.</p>
+    <section id="demo" aria-labelledby="demo-title">
+      <div class="section-title">
+        <h2 id="demo-title">Replay a voice turn</h2>
+        <p>Scripted audio and device states. No microphone required.</p>
       </div>
       <div class="demo-shell">
         <div class="scenarios" role="group" aria-label="Sample voice turns">
-          <button type="button" data-scenario="night" aria-pressed="true"><span>01</span> Night light</button>
-          <button type="button" data-scenario="clock" aria-pressed="false"><span>02</span> Ask the time</button>
-          <button type="button" data-scenario="sky" aria-pressed="false"><span>03</span> Ask a question</button>
+          <button type="button" data-scenario="night" aria-pressed="true">Night light</button>
+          <button type="button" data-scenario="clock" aria-pressed="false">Ask the time</button>
+          <button type="button" data-scenario="sky" aria-pressed="false">Ask a question</button>
         </div>
 
         <div class="demo-grid">
           <div class="console-panel">
-            <div class="phone" id="phone" data-phase="ready">
-              <div class="phone-screen">
-                <div class="phone-meta"><span>BEDSIDE CONSOLE</span><span class="phone-status"><i aria-hidden="true"></i><span id="phone-phase">Ready</span></span></div>
-                <div class="phone-display">
-                  <div class="voice-display" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
-                  <span class="clock" aria-label="Demo clock, 8:42 PM">20<span>:</span>42</span>
-                </div>
-                <div class="phone-bottom"><span id="console-effect">Room lights at full brightness</span><span class="waveform" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span></div>
+            <div class="console" id="phone" data-phase="ready">
+              <div class="console-status"><span>Bedside console</span><span id="phone-phase">Ready</span></div>
+              <time class="clock" datetime="20:42" aria-label="Demo clock, 8:42 PM">20:42</time>
+              <div class="console-controls">
+                <button class="play" type="button" id="play">
+                  <span id="play-icon" aria-hidden="true">▶</span>
+                  <span id="play-label">Play turn</span>
+                </button>
+                <label class="sound"><input id="sound" type="checkbox" checked> Sound</label>
               </div>
             </div>
-            <div class="playback">
-              <button class="button play" type="button" id="play"><span id="play-icon" aria-hidden="true">▶</span><span id="play-label">Play turn</span></button>
-              <label class="sound"><input id="sound" type="checkbox" checked> Sound</label>
-            </div>
-            <p class="caption">Stylized console with sample audio rendered using built-in MOSS-TTS-Nano voice presets.</p>
-            <p class="caption" id="play-error" role="status" hidden>Audio playback is unavailable. The transcript and pipeline stages are still available.</p>
+            <div class="console-effect"><span>Demo state</span><strong id="console-effect">Room lights at full brightness</strong></div>
+            <p class="caption" id="play-error" role="status" hidden>Audio playback is unavailable. The visual replay is still available.</p>
             <audio id="turn-audio" preload="none"></audio>
           </div>
 
           <div class="inspector">
-            <p class="eyebrow inspector-label">Turn inspector <span>SIMULATION</span></p>
+            <h3>Turn trace</h3>
             <dl class="dialogue">
-              <div><dt>Sample request</dt><dd id="request">“Night light.”</dd></div>
-              <div><dt>Console reply</dt><dd id="reply">“Starting night light.”</dd></div>
+              <div><dt>Request</dt><dd id="request">“Night light.”</dd></div>
+              <div><dt>Reply</dt><dd id="reply">“Starting night light.”</dd></div>
             </dl>
             <ol class="trace" aria-label="Pipeline stages">
-              <li><span class="trace-dot" aria-hidden="true"></span><div><strong>Capture</strong><small>Android satellite</small></div></li>
-              <li><span class="trace-dot" aria-hidden="true"></span><div><strong>Transcribe</strong><small>Faster Whisper on the home server</small></div></li>
-              <li><span class="trace-dot" aria-hidden="true"></span><div><strong>Resolve</strong><small id="intent">Home Assistant runs the Night Light routine</small></div></li>
-              <li><span class="trace-dot" aria-hidden="true"></span><div><strong>Speak</strong><small id="route">Play the saved confirmation</small></div></li>
+              <li><div><strong>Capture</strong><small>Galaxy A52s · VACA</small></div></li>
+              <li><div><strong>Transcribe</strong><small>Whisper Small INT8 · server CPU</small></div></li>
+              <li><div><strong>Resolve</strong><small id="intent">Home Assistant runs the Night Light routine</small></div></li>
+              <li><div><strong>Speak</strong><small id="route">Play the saved MOSS-TTS-Nano confirmation</small></div></li>
             </ol>
-            <label class="fallback" id="fallback-option" hidden><input id="fallback" type="checkbox"> Simulate the phone’s speech engine going offline</label>
+            <label class="fallback" id="fallback-option" hidden><input id="fallback" type="checkbox"> Simulate phone synthesis going offline</label>
             <span class="sr-only" id="announcement" role="status"></span>
           </div>
         </div>
       </div>
-      <noscript><p class="caption">JavaScript enables the replay. The example and pipeline are described on this page.</p></noscript>
+      <p class="caption">Audio rendered with built-in MOSS-TTS-Nano voices. The fallback toggle changes the illustrated route and plays the same recording.</p>
+      <noscript><p class="caption">Enable JavaScript to play the samples.</p></noscript>
     </section>
 
-    <section class="architecture wrap" id="pipeline" aria-labelledby="pipeline-title">
-      <div class="section-heading">
+    <section id="models" aria-labelledby="models-title">
+      <div class="section-title"><h2 id="models-title">Model stack</h2></div>
+      <dl class="model-list">
         <div>
-          <p class="eyebrow">02 / The live system</p>
-          <h2 id="pipeline-title">From speech to action.</h2>
+          <dt>Speech recognition</dt>
+          <dd><strong>Whisper Small INT8</strong><p>Faster Whisper on the home server CPU transcribes English audio and sends text to Home Assistant through Wyoming.</p><a href="https://huggingface.co/rhasspy/faster-whisper-small-int8">Model weights</a></dd>
         </div>
-        <p>The Galaxy A52s handles capture and playback. A home server runs recognition and Home Assistant, then returns the reply as streaming audio.</p>
-      </div>
-      <ol class="architecture-flow">
-        <li><span>01 · INPUT</span><strong>Android + VACA</strong><p>Tap the screen to start a turn.</p></li>
-        <li><span>02 · RECOGNITION</span><strong>Faster Whisper</strong><p>Transcribe speech locally.</p></li>
-        <li><span>03 · INTENT</span><strong>Home Assistant</strong><p>Resolve an intent or run a room routine.</p></li>
-        <li><span>04 · OUTPUT</span><strong>Local speech bridge</strong><p>Use saved audio or stream local synthesis.</p></li>
-      </ol>
-      <div class="decisions">
-        <article>
-          <h3>Give the wait a voice.</h3>
-          <p>Fixed confirmations and clock replies can play from saved audio. Fresh answers can start with a short spoken cue while MOSS-TTS-Nano generates the reply.</p>
-        </article>
-        <article>
-          <h3>Recover before the answer starts.</h3>
-          <p>Phone synthesis can fall back to the home server before answer audio arrives. The phone uses a quantized ONNX model. If synthesis fails mid-answer, the bridge reports a failed reply to avoid repeating speech the listener already heard.</p>
-        </article>
-        <article>
-          <h3>Close the playback loop.</h3>
-          <p>The console’s Speaking state follows the first outgoing audio. In wake trials, a playback guard temporarily raised the wake threshold to reduce the chance that playback would start another turn.</p>
-        </article>
-      </div>
+        <div>
+          <dt>Speech synthesis</dt>
+          <dd><strong>MOSS-TTS-Nano 100M + MOSS Audio Tokenizer Nano 20M</strong><p>ONNX Runtime generates audio on the phone CPU with INT8 dense layers and an FP32 codec. The server has an FP32 fallback. The phone emits the first decoded frame immediately, then batches two frames at a time.</p><a href="https://huggingface.co/OpenMOSS-Team/MOSS-TTS-Nano-100M-ONNX">Synthesis model</a> · <a href="https://huggingface.co/OpenMOSS-Team/MOSS-Audio-Tokenizer-Nano-ONNX">Audio codec</a></dd>
+        </div>
+        <div>
+          <dt>Optional public Q&amp;A</dt>
+          <dd><strong>Qwen3 4B Instruct</strong><p>Local Ollama can use Wikipedia passages to compose a short answer when extraction alone is insufficient. Home Assistant Assist handles room commands.</p><a href="https://ollama.com/library/qwen3:4b-instruct">Ollama model</a></dd>
+        </div>
+        <div>
+          <dt>Wake-word trial</dt>
+          <dd><strong>Custom openWakeWord classifier</strong><p>A TFLite model was tested on the phone. Hands-free wake is paused and the console uses tap-to-talk.</p><a href="https://github.com/dscripka/openWakeWord">Training framework</a></dd>
+        </div>
+      </dl>
     </section>
 
-    <section class="evidence" id="measurements" aria-labelledby="evidence-title">
-      <div class="wrap">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">03 / Measurements &amp; limits</p>
-            <h2 id="evidence-title">What the logs showed.</h2>
-          </div>
-          <p>A 24-hour snapshot included regular use and test replays. These timings cover 120 turns that reached outgoing audio.</p>
-        </div>
-        <dl class="metrics">
-          <div><dt>1.22<span> s</span></dt><dd>Median from capture end to first outgoing audio</dd></div>
-          <div><dt>7.30<span> s</span></dt><dd>90th percentile for the same interval</dd></div>
-        </dl>
-        <div class="evidence-notes">
-          <p><strong>Timing boundary.</strong> First outgoing audio can be the thinking cue. The snapshot measures server-side delivery. How long a listener waits to hear the answer remains unmeasured in this sample.</p>
-          <p><strong>Wake phrase trial.</strong> In a 20-clip offline replay, the trial detector accepted 8 of 10 intended calls and 0 of 10 negatives. The original detector accepted 10 of 10 intended calls and 5 of 10 negatives in the same replay. Room false-wake performance remains unmeasured. The console uses tap-to-talk while hands-free wake is paused.</p>
-          <p><strong>Local speech, online lookups.</strong> Room commands, recognition, and speech synthesis can run on the home network. Public knowledge questions can use an online source.</p>
-          <p><strong>One-way controls.</strong> The installation also sends IR and RF commands. A spoken confirmation can report what Home Assistant sent. Physical appliance state requires a separate check.</p>
-        </div>
+    <section id="measurements" aria-labelledby="evidence-title">
+      <div class="section-title"><h2 id="evidence-title">Measurements</h2></div>
+      <div class="measurements">
+        <article>
+          <h3>On-phone synthesis</h3>
+          <p><strong>288 ms</strong> median to first PCM and <strong>0.942×</strong> median real-time factor across 24 warm INT8 replies. A factor below 1 means generation took less time than the duration of the audio.</p>
+          <p class="caption">Measured after input tokens arrived. The benchmark excludes recognition, network transit, and speaker playback.</p>
+        </article>
+        <article>
+          <h3>Voice pipeline</h3>
+          <p><strong>1.22 s</strong> median and <strong>7.30 s</strong> at the 90th percentile from end of capture to first outgoing audio, across 120 turns with audio.</p>
+          <p class="caption">The sample mixes normal use and replays. Some turns start with a thinking cue. Timing ends before the phone plays the sound.</p>
+        </article>
       </div>
     </section>
   </main>
 
   <footer class="wrap">
-    <div><strong>Bedside Voice</strong><span> · Built by darren236</span></div>
-    <nav aria-label="Upstream references">
-      <a href="https://www.home-assistant.io/voice_control/voice_remote_local_assistant/">Home Assistant Assist</a>
-      <a href="https://github.com/msp1974/ViewAssist_Companion_App">VACA</a>
-      <a href="https://github.com/OpenMOSS/MOSS-TTS-Nano">MOSS-TTS-Nano</a>
-    </nav>
+    <span>Built by darren236</span>
+    <a href="https://www.home-assistant.io/voice_control/voice_remote_local_assistant/">Home Assistant Assist</a>
   </footer>
 </body>
 </html>

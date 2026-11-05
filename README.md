@@ -1,32 +1,54 @@
 # Bedside Voice
 
-A spare Android phone became a bedside clock and voice console for Home Assistant. The system turns a spoken request into a room action or a short answer, then sends audio back to the phone.
+A Home Assistant voice console built on a spare Galaxy A52s. **Whisper Small INT8** transcribes speech on the home server. **MOSS-TTS-Nano 100M** streams replies from the phone CPU, with a full-precision server fallback.
 
-![The Bedside Voice console and its step-by-step voice trace](media/preview.png)
+## Models and where they run
 
-## Try the demo
+| Job | Model | Use in this project |
+| --- | --- | --- |
+| Speech recognition | [Whisper Small INT8](https://huggingface.co/rhasspy/faster-whisper-small-int8) | English speech on the server CPU via [Faster Whisper](https://github.com/SYSTRAN/faster-whisper) and [Wyoming](https://www.home-assistant.io/integrations/wyoming/). |
+| Speech synthesis | [MOSS-TTS-Nano 100M ONNX](https://huggingface.co/OpenMOSS-Team/MOSS-TTS-Nano-100M-ONNX) | Primary bedside voice. The Android build quantizes dense layers to INT8. The server runs the FP32 graph for fallback. |
+| Audio codec | [MOSS Audio Tokenizer Nano 20M ONNX](https://huggingface.co/OpenMOSS-Team/MOSS-Audio-Tokenizer-Nano-ONNX) | Decodes generated audio tokens into PCM. The Android decoder stays FP32 and streams incremental chunks. |
+| Optional public Q&A | [Qwen3 4B Instruct](https://ollama.com/library/qwen3:4b-instruct) | Local Ollama can compose a short answer from retrieved Wikipedia passages. Direct extraction handles simpler questions. Home Assistant Assist resolves room commands. |
+| Wake-word trial | [Custom openWakeWord classifier](https://github.com/dscripka/openWakeWord) | TFLite on Android. Hands-free wake is paused after false triggers. Tap-to-talk is the active entry point. |
+| Separate phone Assist pipeline | [Piper `en_US-lessac-medium`](https://huggingface.co/rhasspy/piper-voices/tree/main/en/en_US/lessac/medium) | Server-side speech synthesis for standard phone Assist. The bedside console uses the MOSS pipeline. |
 
-[Download the demo ZIP](https://github.com/darren236/home-assistant-voice-demo/archive/refs/heads/main.zip), extract it, and open `site/index.html` in a browser. The page runs from the extracted folder. The replay uses synthetic audio, scripted timing, and simulated devices.
+## Try the replay
 
-| Example | What to look for |
-| --- | --- |
-| [Night Light](site/audio/night.mp3) | A room routine dims the simulated lights and plays a fixed confirmation. |
-| [Ask the time](site/audio/clock.mp3) | The clock reply comes from a library with a pre-generated clip for each minute. |
-| [Ask a question](site/audio/sky.mp3) | A thinking cue plays before the answer. The fallback toggle shows the route when phone synthesis is unavailable. |
+![The bedside clock and turn trace during a spoken reply](media/preview.png)
 
-## How the live system works
+[Download the ZIP](https://github.com/darren236/home-assistant-voice-demo/archive/refs/heads/main.zip), extract it, and open `site/index.html` in Chrome. The replay uses scripted device states and audio rendered with built-in MOSS-TTS-Nano voice presets.
 
-1. **Capture.** A Galaxy A52s running VACA captures the request and plays the reply.
-2. **Recognize.** Faster Whisper transcribes the request on the home server.
-3. **Resolve.** Home Assistant matches a room action or another intent. Public knowledge lookups can use an online source.
-4. **Speak.** The bridge can play saved audio or stream MOSS-TTS-Nano output. The phone runs a quantized ONNX model. If it fails before answer audio starts, the home server can take over. A mid-answer failure ends the reply to avoid repeating partial speech.
+- [Night Light](site/audio/night.mp3) uses a saved spoken confirmation and dims the simulated room.
+- [Ask the time](site/audio/clock.mp3) illustrates the pre-generated clock bank.
+- [Ask a question](site/audio/sky.mp3) plays a thinking cue before a fresh answer. The phone-offline toggle illustrates server fallback with the same recording.
 
-A 24-hour snapshot of **120 turns that reached outgoing audio** included regular use and test replays. Capture end to first outgoing audio was **1.22 s median** and **7.30 s at the 90th percentile**. The measurement ends at server delivery. On some turns the first audio was the cue.
+## How the speech path works
 
-The console uses tap-to-talk while hands-free wake is paused. In a 20-clip offline replay, the trial detector accepted 8 of 10 intended calls and 0 of 10 negatives. The original accepted 10 of 10 intended calls and 5 of 10 negatives. Room false-wake performance remains unmeasured.
+```text
+Galaxy A52s mic → Whisper Small INT8 → Home Assistant Assist
+                                              ↓
+                     Saved PCM or MOSS synthesis on phone/server
+                                              ↓
+                                  Galaxy A52s speaker
+```
+
+The phone returns the first decoded frame immediately and then decodes two frames at a time. The server applies pitch-preserving tempo and pause processing before Home Assistant streams the reply back to the phone. If phone synthesis fails before answer audio starts, the server can take over. A failure mid-answer ends the reply so the listener does not hear it twice.
+
+The speech bank holds **1,440 clock clips** and **82 common and volume confirmations**. These replies can skip live synthesis. A fresh answer can play a short thinking cue while the next audio is generated.
+
+## What was measured
+
+| Test | Result | Timing boundary |
+| --- | --- | --- |
+| Warm INT8 synthesis on the Galaxy A52s, 24 replies | **288 ms** median to first PCM. **0.942×** median real-time factor, range **0.838–1.004×**. | After input tokens arrive. Component benchmark without capture, network transit, or speaker playback. |
+| Voice pipeline, 120 turns with outgoing audio | **1.22 s** median and **7.30 s** at the 90th percentile. | End of capture to first outgoing audio, which can be the thinking cue. Mixed normal use and test replays. |
+| Wake-word detector, 20-clip offline replay | Original accepted 10/10 intended calls and 5/10 negatives. Trial accepted 8/10 intended calls and 0/10 negatives. | Small offline comparison. An unattended room false-wake rate has yet to be measured. |
+
+The optimized phone run used three threads with CPU spinning and two-frame codec batches after the first frame. The earlier FP32 run on the same phone took 1.70–1.89× audio duration across three replies. Precision, thread count, and codec scheduling differed between runs. A real-time factor below 1 means generation takes less time than the resulting audio. First PCM can contain silence.
 
 ## Source and assets
 
-The `site/` directory is the complete static site. Serve that directory as the document root for hosting. The stylized console is an original illustration. The sample audio was generated with built-in MOSS-TTS-Nano voice presets. `site/turns.js` stores captions and playback timestamps for the three scripted exchanges.
+`site/` is the complete static demo. Its HTML, CSS, JavaScript, and MP3s run from the extracted folder or any static host. `site/turns.js` contains the captions and playback timestamps. The project measurements above come from recorded deployment and component tests, separate from the browser replay.
 
-Built by **darren236**. [Home Assistant Assist](https://www.home-assistant.io/voice_control/voice_remote_local_assistant/) · [VACA](https://github.com/msp1974/ViewAssist_Companion_App) · [MOSS-TTS-Nano](https://github.com/OpenMOSS/MOSS-TTS-Nano)
+Built by **darren236**. [Home Assistant Assist](https://www.home-assistant.io/voice_control/voice_remote_local_assistant/) · [VACA](https://github.com/msp1974/ViewAssist_Companion_App) · [OpenMOSS](https://github.com/OpenMOSS/MOSS-TTS-Nano)
